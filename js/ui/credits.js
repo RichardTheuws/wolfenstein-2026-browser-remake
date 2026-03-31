@@ -329,6 +329,8 @@ export class Credits {
                 <p class="credits-finale-subtitle">2026 Browser Remake</p>
                 <div class="credits-divider"></div>
                 <p class="credits-finale-url">theuws.com/games/wolfenstein-3d</p>
+                <p class="credits-detail" style="margin-top: 1.5rem; opacity: 0.8;">Open Source on GitHub</p>
+                <p class="credits-finale-url" style="font-size: 0.9rem;">github.com/RichardTheuws/wolfenstein-2026-browser-remake</p>
                 <p class="credits-finale-location">Made in Bladel &#x1F1F3;&#x1F1F1;</p>
             </section>
 
