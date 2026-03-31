@@ -12,16 +12,16 @@ This game was built by Richard Theuws (Creative Director, theuws.com) and Claude
 - Controls: WASD + Mouse (desktop), Touch joystick (mobile)
 
 ## Game Content
-- 3 episodes: "Escape from Castle Wolfenstein", "Operation Eisenfaust", "Die, Führer, Die!"
-- 15 playable levels with increasing difficulty
-- 3 boss fights: Hans Grösse, Dr. Schabbs, Hitler (2-phase mech suit + human)
+- 7 episodes: "Escape from Castle Wolfenstein", "Operation Eisenfaust", "Die, Führer, Die!", "A Dark Secret", "Trail of the Madman", "Confrontation", "The Nightmare" (bonus)
+- 33 playable levels with increasing difficulty
+- 7 boss fights: Hans Grösse, Dr. Schabbs, Hitler (2-phase mech suit + human), Otto Giftmacher (gas_cloud attack), Gretel Grösse (tactical hunter), General Fettgesicht (rocket attack), Der Übersoldat (ultimate bonus boss — all attacks combined)
 - 5 enemy types: Guard, SS Soldier, Officer, Dog, Mutant
 - 4 weapons: Knife, Luger P08 pistol, MP40 submachine gun, Chain gun
 - Classic cheat codes: GOD, GUNS, KEYS, MAP, FPS
 
 ## Technology Stack
 - Three.js r170 (WebGL 3D engine)
-- 33 ES6 JavaScript modules, 13,200+ lines of code
+- 33 ES6 JavaScript modules, 15,000+ lines of code
 - No build step — pure HTML/JS, deployable anywhere
 
 ## AI-Generated Assets

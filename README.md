@@ -1,6 +1,6 @@
 # Wolfenstein 3D — 2026 Browser Remake
 
-> Castle Wolfenstein reimagined with AI. 3 episodes, 15 levels, 3 boss fights — playable in your browser.
+> Castle Wolfenstein reimagined with AI. 7 episodes, 33 levels, 7 boss fights — playable in your browser.
 
 **[Play Now](https://theuws.com/games/wolfenstein-3d/)** | **[Credits](#credits)**
 
@@ -8,7 +8,7 @@
 
 ## About
 
-A faithful browser-based remake of the classic 1992 FPS **Wolfenstein 3D** by id Software, rebuilt from scratch using modern web technologies and AI-generated assets. Built in approximately **6 hours** across 2 sessions.
+A faithful browser-based remake of the classic 1992 FPS **Wolfenstein 3D** by id Software, rebuilt from scratch using modern web technologies and AI-generated assets. Built in approximately **8 hours** across 3 sessions.
 
 This project demonstrates what's possible when a human creative director and an AI game master collaborate at full speed.
 
@@ -27,7 +27,10 @@ This project demonstrates what's possible when a human creative director and an 
 | 1 | Escape from Castle Wolfenstein | 5 | Hans Grösse (850 HP) |
 | 2 | Operation Eisenfaust | 5 | Dr. Schabbs (950 HP, summons mutants) |
 | 3 | Die, Führer, Die! | 5 | Hitler (2-phase: mech suit 800 HP → human 500 HP) |
-| 4-6 | Coming Soon | — | Otto Giftmacher, Gretel Grösse, General Fettgesicht |
+| 4 | A Dark Secret | 5 | Otto Giftmacher (850 HP, toxic gas clouds) |
+| 5 | Trail of the Madman | 5 | Gretel Grösse (900 HP, tactical hunter) |
+| 6 | Confrontation | 5 | General Fettgesicht (1200 HP, rockets) |
+| 7 | The Nightmare (Bonus) | 3 | Der Übersoldat (1500 HP, all attacks combined) |
 
 ### Gameplay
 - 5 enemy types: Guard, SS Soldier, Officer, Dog, Mutant

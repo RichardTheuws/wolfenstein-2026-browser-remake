@@ -40,6 +40,47 @@ const EPISODE_TEXTURES = {
         floor: 'e3/e3_floor.jpg',
         ceiling: 'e3/e3_ceiling.jpg',
     },
+    4: {  // Episode 4: Chemical labs — toxic green, hazmat, industrial
+        walls: {
+            1: 'e4/e4_wall_concrete.jpg',
+            3: 'e4/e4_wall_hazmat.jpg',
+            4: 'e4/e4_wall_pipe.jpg',
+            5: 'e4/e4_wall_chemical.jpg',
+            7: 'e4/e4_wall_metal.jpg',
+        },
+        floor: 'e4/e4_floor.jpg',
+        ceiling: 'e4/e4_ceiling.jpg',
+    },
+    5: {  // Episode 5: Military fortress — concrete, steel, radar installations
+        walls: {
+            1: 'e5/e5_wall_concrete.jpg',
+            3: 'e5/e5_wall_reinforced.jpg',
+            5: 'e5/e5_wall_camo.jpg',
+            7: 'e5/e5_wall_steel.jpg',
+        },
+        floor: 'e5/e5_floor.jpg',
+        ceiling: 'e5/e5_ceiling.jpg',
+    },
+    6: {  // Episode 6: Mountain fortress — rock, industrial, bunker
+        walls: {
+            1: 'e6/e6_wall_rock.jpg',
+            3: 'e6/e6_wall_concrete.jpg',
+            5: 'e6/e6_wall_industrial.jpg',
+            7: 'e6/e6_wall_armored.jpg',
+        },
+        floor: 'e6/e6_floor.jpg',
+        ceiling: 'e6/e6_ceiling.jpg',
+    },
+    7: {  // Episode 7: Bonus — reuse E6 mountain fortress (the nightmare continues)
+        walls: {
+            1: 'e6/e6_wall_rock.jpg',
+            3: 'e6/e6_wall_concrete.jpg',
+            5: 'e6/e6_wall_industrial.jpg',
+            7: 'e6/e6_wall_armored.jpg',
+        },
+        floor: 'e6/e6_floor.jpg',
+        ceiling: 'e6/e6_ceiling.jpg',
+    },
 };
 
 /** Directions for face culling checks: [dx, dz, rotationY, offsetX, offsetZ] */

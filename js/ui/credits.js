@@ -253,27 +253,27 @@ export class Credits {
                         <span class="credits-stat-label">JavaScript Modules</span>
                     </div>
                     <div class="credits-stat">
-                        <span class="credits-stat-number">13,200+</span>
+                        <span class="credits-stat-number">15,000+</span>
                         <span class="credits-stat-label">Lines of Code</span>
                     </div>
                     <div class="credits-stat">
-                        <span class="credits-stat-number">15</span>
+                        <span class="credits-stat-number">33</span>
                         <span class="credits-stat-label">Playable Levels</span>
                     </div>
                     <div class="credits-stat">
-                        <span class="credits-stat-number">3</span>
+                        <span class="credits-stat-number">7</span>
                         <span class="credits-stat-label">Epic Boss Fights</span>
                     </div>
                     <div class="credits-stat">
-                        <span class="credits-stat-number">7</span>
+                        <span class="credits-stat-number">11</span>
                         <span class="credits-stat-label">Animated 3D Models</span>
                     </div>
                     <div class="credits-stat">
-                        <span class="credits-stat-number">11</span>
+                        <span class="credits-stat-number">19</span>
                         <span class="credits-stat-label">Original Music Tracks</span>
                     </div>
                     <div class="credits-stat">
-                        <span class="credits-stat-number">15+</span>
+                        <span class="credits-stat-number">20+</span>
                         <span class="credits-stat-label">German Voice Lines</span>
                     </div>
                     <div class="credits-stat">
@@ -281,11 +281,11 @@ export class Credits {
                         <span class="credits-stat-label">Sound Effects</span>
                     </div>
                     <div class="credits-stat">
-                        <span class="credits-stat-number">30+</span>
+                        <span class="credits-stat-number">50+</span>
                         <span class="credits-stat-label">AI-Generated Textures</span>
                     </div>
                     <div class="credits-stat credits-stat--highlight">
-                        <span class="credits-stat-number">~6</span>
+                        <span class="credits-stat-number">~8</span>
                         <span class="credits-stat-label">Hours Total Development</span>
                     </div>
                 </div>
@@ -306,7 +306,7 @@ export class Credits {
                         <span class="credits-stat-label">ElevenLabs Pro (Voices &amp; SFX)</span>
                     </div>
                 </div>
-                <p class="credits-detail" style="margin-top: 1.5rem; opacity: 0.7; font-style: italic;">A complete FPS with 3 episodes, 15 levels, and 3 boss fights &mdash;<br>built in 6 hours for $6 in generation costs.</p>
+                <p class="credits-detail" style="margin-top: 1.5rem; opacity: 0.7; font-style: italic;">A complete FPS with 7 episodes, 33 levels, and 7 boss fights &mdash;<br>built in 8 hours across 3 sessions for ~$12 in generation costs.</p>
             </section>
 
             <div class="credits-gap"></div>

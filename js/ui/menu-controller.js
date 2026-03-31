@@ -130,16 +130,6 @@ export class MenuController {
         this._episodeCards.forEach((card) => {
             this._addHandler(card, 'click', () => {
                 const ep = parseInt(card.dataset.episode, 10) || 1;
-                // Episodes 4-6 coming soon
-                if (ep > 3) {
-                    const badge = card.querySelector('.episode-badge');
-                    if (badge) {
-                        badge.style.color = '#ff6644';
-                        badge.textContent = 'COMING SOON!';
-                        setTimeout(() => { badge.style.color = ''; badge.textContent = 'COMING SOON'; }, 1500);
-                    }
-                    return;
-                }
                 this._selectedEpisode = ep;
 
                 // Highlight selected card

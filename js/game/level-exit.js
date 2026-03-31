@@ -306,8 +306,10 @@ export class LevelExit {
         }
 
         // Advance floor in game state (skip floors 5-9, jump to boss on floor 10)
+        // Bonus episode (7) has 2 regular levels before the boss
         const currentFloor = this._gameState.currentFloor;
-        this._gameState.currentFloor = currentFloor >= 4 ? 10 : currentFloor + 1;
+        const bossThreshold = this._gameState.currentEpisode === 7 ? 2 : 4;
+        this._gameState.currentFloor = currentFloor >= bossThreshold ? 10 : currentFloor + 1;
 
         // Emit advance event for main.js to handle level loading
         eventBus.emit('level:advance', {

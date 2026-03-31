@@ -5,6 +5,7 @@
  * Manages transitions between menu, gameplay, and pause states.
  */
 
+import * as THREE from 'three';
 import { Renderer } from './engine/renderer.js';
 import { InputManager } from './engine/input.js';
 import { CollisionSystem } from './engine/collision.js';
@@ -224,7 +225,7 @@ async function boot() {
         totalSecrets: levelLoader.secrets.length,
         totalKills: levelLoader.entities.length,
         totalTreasures: levelLoader.pickups.filter(
-            (p) => ['cross', 'chalice', 'chest', 'crown'].includes(p.type)
+            (p) => p.type?.startsWith('treasure')
         ).length,
         parTime: levelLoader.levelData?.par_time || 0,
     });
@@ -262,6 +263,10 @@ async function boot() {
     const bossModelMap = {
         hitler_mech: 'hitler_mech',
         hitler: 'hitler',
+        otto: 'otto',
+        gretel: 'gretel',
+        fettgesicht: 'fettgesicht',
+        ubersoldier: 'ubersoldier',
     };
     Object.entries(bossModelMap).forEach(([type, filename]) => {
         Boss.preloadModel(type, `assets/models/animated/${filename}.glb`).catch(() => {});
@@ -289,6 +294,14 @@ async function boot() {
     await audioManager.loadTrack('e2_combat', 'assets/audio/music/e2_theme.mp3');
     await audioManager.loadTrack('e3_explore', 'assets/audio/music/e3_theme.mp3');
     await audioManager.loadTrack('e3_combat', 'assets/audio/music/e3_theme.mp3');
+    audioManager.loadTrack('e4_explore', 'assets/audio/music/e4_exploration.mp3').catch(() => {});
+    audioManager.loadTrack('e4_combat', 'assets/audio/music/e4_combat.mp3').catch(() => {});
+    audioManager.loadTrack('e5_explore', 'assets/audio/music/e5_exploration.mp3').catch(() => {});
+    audioManager.loadTrack('e5_combat', 'assets/audio/music/e5_combat.mp3').catch(() => {});
+    audioManager.loadTrack('e6_explore', 'assets/audio/music/e6_exploration.mp3').catch(() => {});
+    audioManager.loadTrack('e6_combat', 'assets/audio/music/e6_combat.mp3').catch(() => {});
+    audioManager.loadTrack('e7_explore', 'assets/audio/music/e7_exploration.mp3').catch(() => {});
+    audioManager.loadTrack('e7_combat', 'assets/audio/music/e7_combat.mp3').catch(() => {});
     await audioManager.loadTrack('victory', 'assets/audio/music/victory.mp3');
     await audioManager.loadTrack('gameover', 'assets/audio/music/gameover.mp3');
 
@@ -301,6 +314,10 @@ async function boot() {
         'mutant_alert', 'mutant_attack', 'mutant_death',
         'schabbs_welcome',
         'hitler_rage',
+        'otto_willkommen',
+        'gretel_willkommen',
+        'fettgesicht_willkommen',
+        'ubersoldier_willkommen',
     ];
     await Promise.all(voiceFiles.map(v => audioManager.loadSFX(v, `assets/audio/voices/${v}.mp3`)));
 
@@ -332,9 +349,8 @@ async function boot() {
     menuController = new MenuController();
     menuController.onStartGame(({ episode, difficulty }) => {
         gameState.setDifficulty(difficulty);
-        gameState.currentEpisode = episode;
         menuController.hide();
-        startGame();
+        startGame(episode);
     });
 
     // Cinematics system
@@ -786,7 +802,17 @@ function wireEvents() {
 
     // Refresh enemy meshes for raycasting after enemy dies (include boss meshes)
     // + death satisfaction: big screen shake + hit stop slow-motion
-    eventBus.on('enemy:death', () => {
+    eventBus.on('enemy:death', (data) => {
+        // Record kill + award score (skip boss — boss.js handles its own scoring)
+        if (data.type !== 'boss') {
+            if (data.score) {
+                gameState.addScore(data.score);
+            }
+            if (!data.summoned) {
+                gameState.recordKill();
+            }
+        }
+
         const enemyMeshes = enemyManager.getEnemyMeshes();
         const bossMeshes = boss ? boss.getMeshes() : [];
         weaponSystem.setEnemyMeshes([...enemyMeshes, ...bossMeshes]);
@@ -892,6 +918,15 @@ function wireEvents() {
                 boss = null;
             }
 
+            // Clean up gas cloud meshes from Otto Giftmacher
+            for (const mesh of gasCloudMeshes) {
+                renderer.scene.remove(mesh);
+                mesh.geometry?.dispose();
+                mesh.material?.dispose();
+            }
+            gasCloudMeshes.length = 0;
+            if (gasOverlay) gasOverlay.style.opacity = '0';
+
             // Load the next level
             await levelLoader.loadLevel(levelId);
             collision.setGrid(levelLoader.grid, levelLoader.width, levelLoader.height);
@@ -940,7 +975,7 @@ function wireEvents() {
                 totalSecrets: levelLoader.secrets.length,
                 totalKills,
                 totalTreasures: levelLoader.pickups.filter(
-                    (p) => ['cross', 'chalice', 'chest', 'crown'].includes(p.type)
+                    (p) => p.type?.startsWith('treasure')
                 ).length,
                 parTime: levelLoader.levelData?.par_time || 0,
             });
@@ -979,8 +1014,8 @@ function wireEvents() {
 
     // Secret found — SFX + log for debugging
     eventBus.on('secret:found', (data) => {
+        gameState.recordSecret();
         audioManager.playSFX('secret_found', 1.0);
-        console.log(`[main.js] Secret found! ${data.totalFound}/${data.totalSecrets}`);
     });
 
     // ── Boss Events ───────────────────────────────────────────────
@@ -1034,6 +1069,87 @@ function wireEvents() {
             const bossMeshes = boss ? boss.getMeshes() : [];
             weaponSystem.setEnemyMeshes([...enemyMeshes, ...bossMeshes]);
         }
+    });
+
+    // Boss gas cloud — Otto Giftmacher deploys toxic gas (3D visual + screen overlay)
+    /** @type {HTMLDivElement|null} */
+    let gasOverlay = null;
+    /** @type {THREE.Mesh[]} Active 3D gas cloud meshes in the scene */
+    const gasCloudMeshes = [];
+
+    eventBus.on('boss:gas_cloud', (data) => {
+        console.log(`[main.js] Gas cloud deployed at (${data.x.toFixed(1)}, ${data.z.toFixed(1)})`);
+
+        // 3D gas cloud: translucent green cylinder in the scene
+        const gasGeo = new THREE.CylinderGeometry(data.radius, data.radius, 1.8, 16);
+        const gasMat = new THREE.MeshBasicMaterial({
+            color: 0x00cc00,
+            transparent: true,
+            opacity: 0.15,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+        });
+        const gasMesh = new THREE.Mesh(gasGeo, gasMat);
+        gasMesh.position.set(data.x, 0.9, data.z);
+        renderer.scene.add(gasMesh);
+        gasCloudMeshes.push(gasMesh);
+
+        // Animate gas opacity pulse + auto-remove after duration
+        const startTime = performance.now();
+        const duration = (data.duration || 5) * 1000;
+        const animateGas = () => {
+            const elapsed = performance.now() - startTime;
+            if (elapsed >= duration) {
+                renderer.scene.remove(gasMesh);
+                gasGeo.dispose();
+                gasMat.dispose();
+                const idx = gasCloudMeshes.indexOf(gasMesh);
+                if (idx !== -1) gasCloudMeshes.splice(idx, 1);
+                return;
+            }
+            // Pulse opacity
+            const fade = elapsed > duration * 0.7 ? 1 - (elapsed - duration * 0.7) / (duration * 0.3) : 1;
+            gasMat.opacity = (0.1 + Math.sin(elapsed / 300) * 0.05) * fade;
+            // Slow rotation for visual interest
+            gasMesh.rotation.y += 0.005;
+            requestAnimationFrame(animateGas);
+        };
+        requestAnimationFrame(animateGas);
+
+        // Screen overlay for when player is near
+        if (!gasOverlay) {
+            gasOverlay = document.createElement('div');
+            Object.assign(gasOverlay.style, {
+                position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
+                background: 'radial-gradient(circle, rgba(0,180,0,0.15) 0%, transparent 70%)',
+                pointerEvents: 'none', zIndex: '900', opacity: '0',
+                transition: 'opacity 0.3s ease-in',
+            });
+            document.body.appendChild(gasOverlay);
+        }
+    });
+
+    eventBus.on('boss:gas_damage', () => {
+        // Flash green overlay on gas damage tick
+        if (gasOverlay) {
+            gasOverlay.style.opacity = '1';
+            gasOverlay.style.background = 'radial-gradient(circle, rgba(0,200,0,0.3) 0%, rgba(0,100,0,0.1) 60%, transparent 80%)';
+            setTimeout(() => {
+                if (gasOverlay) gasOverlay.style.opacity = '0.4';
+            }, 200);
+        }
+    });
+
+    eventBus.on('boss:gas_cloud_expire', () => {
+        if (gasOverlay) {
+            gasOverlay.style.opacity = '0';
+        }
+    });
+
+    // Boss rocket fire — Fettgesicht's rockets (screen shake + audio)
+    eventBus.on('boss:rocket_fire', () => {
+        player.shake(0.8);
+        audioManager.playSFX('weapon_chaingun', 0.8);
     });
 
     // Boss door lock — emitted when player enters boss trigger zone
@@ -1153,19 +1269,80 @@ function wireEvents() {
  * Start a new game from the main menu.
  * Plays the episode intro cinematic first, then begins gameplay.
  */
-async function startGame() {
-    gameState.newGame();
+async function startGame(episode = 1) {
+    // Clean up previous game state
+    if (boss) { boss.dispose(); boss = null; }
+    for (const mesh of gasCloudMeshes) {
+        renderer.scene.remove(mesh);
+        mesh.geometry?.dispose();
+        mesh.material?.dispose();
+    }
+    gasCloudMeshes.length = 0;
+    if (gasOverlay) gasOverlay.style.opacity = '0';
+    stopGameLoop();
 
-    // Reset level exit for the starting floor
+    gameState.newGame();
+    gameState.currentEpisode = episode;
+    gameState.currentFloor = 1;
+
+    // Load the first level of the selected episode
+    const levelId = `e${episode}m1`;
+    try {
+        await levelLoader.loadLevel(levelId);
+    } catch (err) {
+        console.error(`Failed to load ${levelId}:`, err);
+        return;
+    }
+
+    // Re-initialize all systems for the new level (same pattern as level:advance)
+    collision.setGrid(levelLoader.grid, levelLoader.width, levelLoader.height);
+
+    doorSystem.dispose();
+    doorSystem = new DoorSystem(levelLoader, collision, gameState);
+
+    secretSystem.dispose();
+    secretSystem = new SecretSystem(levelLoader, collision, gameState);
+
+    enemyManager.dispose();
+    enemyManager = new EnemyManager(renderer.scene, collision, gameState, player);
+
+    pickupSystem.dispose();
+    pickupSystem = new PickupSystem(renderer.scene, gameState, player, renderer.camera);
+
+    // Set exit (boss levels start locked)
     levelExit.reset();
-    if (levelLoader.exit) {
+    const isBossLevel = levelLoader.levelData?.isBossLevel;
+    if (levelLoader.exit && !isBossLevel) {
         levelExit.setExit(levelLoader.exit.x, levelLoader.exit.z);
     }
+
+    // Spawn enemies and pickups
+    enemyManager.spawnFromLevel(levelLoader.entities);
+    pickupSystem.spawnFromLevel(levelLoader.pickups);
+
+    // Boss level setup
+    if (isBossLevel && levelLoader.levelData?.boss) {
+        const bossData = levelLoader.levelData.boss;
+        boss = new Boss(bossData.type || 'hans', renderer.scene, collision, gameState, player);
+        boss.spawn(bossData.x, bossData.z, bossData.triggerZone);
+        weaponSystem.setEnemyMeshes([...enemyManager.getEnemyMeshes(), ...boss.getMeshes()]);
+    } else {
+        weaponSystem.setEnemyMeshes(enemyManager.getEnemyMeshes());
+    }
+
+    // Initialize level stats
+    const totalKills = levelLoader.entities.length + (isBossLevel ? 1 : 0);
+    gameState.startLevel({
+        totalSecrets: levelLoader.secrets.length,
+        totalKills,
+        totalTreasures: levelLoader.pickups.filter(p => p.type?.startsWith('treasure')).length,
+        parTime: levelLoader.levelData?.par_time || 90,
+    });
 
     player.spawn(levelLoader.spawnPoint.x, levelLoader.spawnPoint.z, levelLoader.spawnPoint.angle);
 
     // Play episode intro cinematic before starting gameplay
-    const introBeats = EPISODE_INTROS[gameState.currentEpisode];
+    const introBeats = EPISODE_INTROS[episode];
     if (introBeats) {
         await cinematics.play(introBeats);
     }
@@ -1246,14 +1423,26 @@ async function continueGame() {
         pickupSystem = new PickupSystem(renderer.scene, gameState, player, renderer.camera);
 
         enemyManager.spawnFromLevel(levelLoader.entities);
-        weaponSystem.setEnemyMeshes(enemyManager.getEnemyMeshes());
         pickupSystem.spawnFromLevel(levelLoader.pickups);
+
+        // Boss level: spawn boss and lock exit
+        const isBossLevel = levelLoader.levelData?.isBossLevel;
+        if (isBossLevel && levelLoader.levelData?.boss) {
+            const bossData = levelLoader.levelData.boss;
+            boss = new Boss(bossData.type || 'hans', renderer.scene, collision, gameState, player);
+            boss.spawn(bossData.x, bossData.z, bossData.triggerZone);
+            weaponSystem.setEnemyMeshes([...enemyManager.getEnemyMeshes(), ...boss.getMeshes()]);
+            // Boss levels start with exit locked
+            levelExit.reset();
+        } else {
+            weaponSystem.setEnemyMeshes(enemyManager.getEnemyMeshes());
+        }
 
         gameState.startLevel({
             totalSecrets: levelLoader.secrets.length,
-            totalKills: levelLoader.entities.length,
+            totalKills: levelLoader.entities.length + (isBossLevel ? 1 : 0),
             totalTreasures: levelLoader.pickups.filter(
-                (p) => ['cross', 'chalice', 'chest', 'crown'].includes(p.type)
+                (p) => p.type?.startsWith('treasure')
             ).length,
             parTime: levelLoader.levelData?.par_time || 0,
         });
@@ -1336,6 +1525,7 @@ function showEpisodeComplete(episode) {
         'A Dark Secret',
         'Trail of the Madman',
         'Confrontation',
+        'The Nightmare',
     ];
 
     const card = document.createElement('div');
@@ -1365,9 +1555,12 @@ function showEpisodeComplete(episode) {
         ${episode < 6 ? `
         <p style="color: #3498db; font-size: 12px; margin: 0 0 30px 0;">
             Episode ${episode + 1} unlocked!
+        </p>` : episode === 6 ? `
+        <p style="color: #ff4444; font-size: 12px; margin: 0 0 30px 0;">
+            BONUS EPISODE UNLOCKED: The Nightmare
         </p>` : `
         <p style="color: #f39c12; font-size: 14px; margin: 0 0 30px 0;">
-            Congratulations! You have completed all episodes!
+            THE NIGHTMARE IS OVER. You have conquered everything.
         </p>`}
         <div style="margin-top: 20px; color: #7f8c8d; font-size: 10px; animation: blink 1.2s ease-in-out infinite;">
             Press any key to return to menu
@@ -1381,7 +1574,7 @@ function showEpisodeComplete(episode) {
     document.body.appendChild(overlay);
 
     // Unlock next episode in the episode select screen + persist to localStorage
-    if (episode < 6) {
+    if (episode < 7) {
         const nextEp = episode + 1;
         const nextEpCard = document.querySelector(`.episode-card[data-episode="${nextEp}"]`);
         if (nextEpCard) {
@@ -1412,7 +1605,7 @@ function showEpisodeComplete(episode) {
         overlay.remove();
 
         // Play credits after completing Episode 3 or 6
-        if (episode === 3 || episode === 6) {
+        if (episode === 3 || episode === 6 || episode === 7) {
             audioManager.stopMusic();
             await credits.play();
         }
@@ -1428,7 +1621,7 @@ function showEpisodeComplete(episode) {
             overlay.remove();
 
             // Play credits after completing Episode 3 or 6
-            if (episode === 3 || episode === 6) {
+            if (episode === 3 || episode === 6 || episode === 7) {
                 audioManager.stopMusic();
                 await credits.play();
             }
@@ -1531,6 +1724,14 @@ function quitToMenu() {
         boss.dispose();
         boss = null;
     }
+    // Clean up gas cloud meshes + overlay
+    for (const mesh of gasCloudMeshes) {
+        renderer.scene.remove(mesh);
+        mesh.geometry?.dispose();
+        mesh.material?.dispose();
+    }
+    gasCloudMeshes.length = 0;
+    if (gasOverlay) gasOverlay.style.opacity = '0';
     stopAmbientAudio();
     audioManager.stopMusic();
     audioManager.playMusic('menu');

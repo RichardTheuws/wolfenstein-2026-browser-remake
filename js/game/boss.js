@@ -84,6 +84,81 @@ export const BOSS_TYPES = {
         enrageThreshold: 0.3,
         attacks: ['strafe_fire', 'charge', 'strafe_fire', 'pause'],
     },
+
+    // ── Episode 4 Boss ───────────────────────────────────────────
+    otto: {
+        name: 'OTTO GIFTMACHER',
+        hp: 850,
+        score: 8000,
+        speed: 1.8,
+        chargeSpeed: 3.5,
+        damage: [6, 20],           // Direct fire damage
+        gasDamage: [2, 5],         // Gas cloud tick damage
+        fireRate: 0.6,
+        size: { height: 2.2, width: 0.9 },
+        color: 0x4a6a2a,           // Olive green — chemical warfare
+        dropType: 'pistol_ammo',
+        dropAmount: 25,
+        voice: 'otto_willkommen',
+        enrageThreshold: 0.35,
+        attacks: ['strafe_fire', 'gas_cloud', 'charge', 'gas_cloud', 'pause'],
+    },
+
+    // ── Episode 5 Boss ───────────────────────────────────────────
+    gretel: {
+        name: 'GRETEL GRÖSSE',
+        hp: 900,
+        score: 7000,
+        speed: 2.5,                // Faster than Hans — she's a hunter
+        chargeSpeed: 5.0,          // Devastatingly fast charge
+        damage: [8, 25],
+        fireRate: 0.12,            // Rapid fire — dual chainguns like Hans
+        size: { height: 2.3, width: 0.9 },
+        color: 0x3a3a5a,           // Dark blue-grey tactical uniform
+        dropType: 'pistol_ammo',
+        dropAmount: 20,
+        voice: 'gretel_willkommen',
+        enrageThreshold: 0.25,     // Enrages later — she stays controlled
+        attacks: ['strafe_fire', 'charge', 'strafe_fire', 'charge', 'pause'],
+    },
+
+    // ── Episode 6 Boss — THE FINAL BOSS ──────────────────────────
+    fettgesicht: {
+        name: 'GENERAL FETTGESICHT',
+        hp: 1200,                  // Toughest boss in the game
+        score: 15000,
+        speed: 1.5,                // Slow but devastating
+        chargeSpeed: 3.0,
+        damage: [12, 35],          // Highest direct damage
+        rocketDamage: [15, 40],    // Rocket attack damage
+        fireRate: 0.8,             // Slow fire — each shot counts
+        size: { height: 2.6, width: 1.2 },  // Imposing figure
+        color: 0x5a3a2a,           // Military brown
+        dropType: 'chaingun_ammo',
+        dropAmount: 50,
+        voice: 'fettgesicht_willkommen',
+        enrageThreshold: 0.3,
+        attacks: ['rocket', 'strafe_fire', 'rocket', 'charge', 'pause'],
+    },
+    // ── BONUS Episode Boss — THE ULTIMATE CHALLENGE ─────────────
+    ubersoldier: {
+        name: 'DER ÜBERSOLDIER',
+        hp: 1500,                  // The hardest boss in the game
+        score: 25000,
+        speed: 2.2,
+        chargeSpeed: 4.5,
+        damage: [10, 30],
+        gasDamage: [3, 7],         // Gas clouds (from Otto)
+        rocketDamage: [12, 35],    // Rockets (from Fettgesicht)
+        fireRate: 0.2,
+        size: { height: 2.8, width: 1.3 },
+        color: 0x2a1a1a,           // Dark crimson — the perfect soldier
+        dropType: 'chaingun_ammo',
+        dropAmount: 50,
+        voice: 'ubersoldier_willkommen',
+        enrageThreshold: 0.4,      // Enrages at 40% — then the real fight begins
+        attacks: ['strafe_fire', 'gas_cloud', 'rocket', 'charge', 'gas_cloud', 'summon', 'pause'],
+    },
 };
 
 // ── Boss AI States ────────────────────────────────────────────────
@@ -95,6 +170,8 @@ const BOSS_STATE = {
     CHARGE: 'charge',
     CIRCLE_FIRE: 'circle_fire',
     SUMMON: 'summon',
+    GAS_CLOUD: 'gas_cloud',
+    ROCKET: 'rocket',
     PAUSE: 'pause',
     ENRAGE: 'enrage',
     PHASE_TRANSITION: 'phase_transition',
@@ -127,6 +204,24 @@ const MAX_SUMMONS = 3;
 
 /** Death animation total duration (seconds) */
 const DEATH_TOTAL_DURATION = 2.5;
+
+/** Gas cloud throw phase duration (seconds) — Otto Giftmacher */
+const GAS_CLOUD_THROW_DURATION = 1.5;
+
+/** Gas cloud zone lifetime after deployment (seconds) */
+const GAS_ZONE_LIFETIME = 5.0;
+
+/** Gas cloud zone damage radius (world units) */
+const GAS_ZONE_RADIUS = 3.0;
+
+/** Gas cloud damage tick interval (seconds) */
+const GAS_TICK_INTERVAL = 0.5;
+
+/** Rocket attack phase duration (seconds) — General Fettgesicht */
+const ROCKET_DURATION = 3.5;
+
+/** Rocket fire interval (seconds) — slow but devastating */
+const ROCKET_FIRE_INTERVAL = 1.2;
 
 /** Phase transition pause duration (seconds) — mech explodes before Hitler emerges */
 const PHASE_TRANSITION_DURATION = 1.5;
@@ -271,6 +366,12 @@ export class Boss {
 
         /** Attack cycle counter — used for Schabbs summon timing */
         this._attackCycleCount = 0;
+
+        /** Active gas zones (Otto Giftmacher) — {x, z, lifetime, tickTimer} */
+        this._gasZones = [];
+
+        /** Gas damage cooldown to prevent double-ticking within same interval */
+        this._gasDamageTimer = 0;
 
         /** Boss ID string — used for hit detection and event identification */
         this._bossId = `boss_${bossType}`;
@@ -448,6 +549,14 @@ export class Boss {
                 this._updateSummon(dt);
                 break;
 
+            case BOSS_STATE.GAS_CLOUD:
+                this._updateGasCloud(dt);
+                break;
+
+            case BOSS_STATE.ROCKET:
+                this._updateRocket(dt);
+                break;
+
             case BOSS_STATE.PAUSE:
                 this._updatePause(dt);
                 break;
@@ -478,6 +587,9 @@ export class Boss {
                 this.position.z
             );
         }
+
+        // Update active gas zones (Otto Giftmacher area denial)
+        this._updateGasZones(dt);
 
         // Update health bar
         this._updateHealthBar();
@@ -602,6 +714,9 @@ export class Boss {
             });
             this.mesh = null;
         }
+
+        // Clean up any active gas zones
+        this._gasZones = [];
 
         this._removeHealthBar();
         this._spawned = false;
@@ -794,16 +909,33 @@ export class Boss {
             this._performSummon();
         }
 
-        // Flash boss green during summon (visual cue)
-        if (this.mesh && this.mesh.material) {
+        // Flash boss green during summon (visual cue — works for both 3D models and placeholders)
+        if (this.mesh) {
             const pulse = Math.sin(performance.now() / 100) > 0;
-            this.mesh.material.emissive.setHex(pulse ? 0x003300 : 0x001100);
+            const hexVal = pulse ? 0x003300 : 0x001100;
+            if (this._usesModel) {
+                this.mesh.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        child.material.emissive?.setHex(hexVal);
+                    }
+                });
+            } else if (this.mesh.material) {
+                this.mesh.material.emissive.setHex(hexVal);
+            }
         }
 
         if (this._stateTimer <= 0) {
             // Restore emissive
-            if (this.mesh && this.mesh.material) {
-                this.mesh.material.emissive.setHex(0x000000);
+            if (this.mesh) {
+                if (this._usesModel) {
+                    this.mesh.traverse((child) => {
+                        if (child.isMesh && child.material) {
+                            child.material.emissive?.setHex(0x000000);
+                        }
+                    });
+                } else if (this.mesh.material) {
+                    this.mesh.material.emissive.setHex(0x000000);
+                }
             }
             this.state = BOSS_STATE.PAUSE;
             this._stateTimer = ATTACK_PAUSE_DURATION;
@@ -850,6 +982,181 @@ export class Boss {
         if (data.summoned && this._activeSummons > 0) {
             this._activeSummons--;
         }
+    }
+
+    /**
+     * GAS_CLOUD state (Otto Giftmacher): throw a toxic gas cloud at the player's position.
+     * Creates a persistent damage zone that hurts the player if they stand in it.
+     * @param {number} dt
+     */
+    _updateGasCloud(dt) {
+        this._stateTimer -= dt;
+
+        // Face the player
+        const playerPos = this._player.position;
+        const dx = playerPos.x - this.position.x;
+        const dz = playerPos.z - this.position.z;
+
+        // Deploy gas at midpoint of the throw animation
+        if (this._stateTimer <= GAS_CLOUD_THROW_DURATION / 2 &&
+            this._stateTimer + dt > GAS_CLOUD_THROW_DURATION / 2) {
+            // Gas zone at player's current position (they must dodge!)
+            this._gasZones.push({
+                x: playerPos.x,
+                z: playerPos.z,
+                lifetime: GAS_ZONE_LIFETIME,
+                tickTimer: 0,
+            });
+            eventBus.emit('boss:gas_cloud', {
+                x: playerPos.x,
+                z: playerPos.z,
+                radius: GAS_ZONE_RADIUS,
+                duration: GAS_ZONE_LIFETIME,
+            });
+        }
+
+        // Flash boss green during throw (visual cue)
+        if (this.mesh) {
+            const pulse = Math.sin(performance.now() / 100) > 0;
+            if (this._usesModel) {
+                this.mesh.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        child.material.emissive?.setHex(pulse ? 0x003300 : 0x001100);
+                    }
+                });
+            } else if (this.mesh.material) {
+                this.mesh.material.emissive.setHex(pulse ? 0x003300 : 0x001100);
+            }
+        }
+
+        if (this._stateTimer <= 0) {
+            // Restore emissive
+            if (this.mesh) {
+                if (this._usesModel) {
+                    this.mesh.traverse((child) => {
+                        if (child.isMesh && child.material) {
+                            child.material.emissive?.setHex(0x000000);
+                        }
+                    });
+                } else if (this.mesh.material) {
+                    this.mesh.material.emissive.setHex(0x000000);
+                }
+            }
+            this.state = BOSS_STATE.PAUSE;
+            this._stateTimer = ATTACK_PAUSE_DURATION;
+        }
+    }
+
+    /**
+     * Update active gas zones: tick down lifetimes and deal damage to player if in range.
+     * @param {number} dt
+     */
+    _updateGasZones(dt) {
+        if (this._gasZones.length === 0) return;
+
+        const playerPos = this._player.position;
+        const gasDmg = this._typeData.gasDamage || [2, 5];
+
+        for (let i = this._gasZones.length - 1; i >= 0; i--) {
+            const zone = this._gasZones[i];
+            zone.lifetime -= dt;
+            zone.tickTimer += dt;
+
+            // Remove expired zones
+            if (zone.lifetime <= 0) {
+                this._gasZones.splice(i, 1);
+                eventBus.emit('boss:gas_cloud_expire', { x: zone.x, z: zone.z });
+                continue;
+            }
+
+            // Check if player is in the gas zone
+            const dx = playerPos.x - zone.x;
+            const dz = playerPos.z - zone.z;
+            const distSq = dx * dx + dz * dz;
+
+            if (distSq <= GAS_ZONE_RADIUS * GAS_ZONE_RADIUS && zone.tickTimer >= GAS_TICK_INTERVAL) {
+                zone.tickTimer = 0;
+                const damage = Math.floor(Math.random() * (gasDmg[1] - gasDmg[0] + 1)) + gasDmg[0];
+                eventBus.emit('enemy:attack', {
+                    enemyId: this._bossId,
+                    damage,
+                    distance: Math.sqrt(distSq),
+                    isGas: true,
+                });
+                // Emit gas damage indicator
+                eventBus.emit('boss:gas_damage', { damage });
+            }
+        }
+    }
+
+    /**
+     * ROCKET state (General Fettgesicht): slow strafe with devastating rocket fire.
+     * Rockets cause screen shake on impact — maximum intimidation.
+     * @param {number} dt
+     */
+    _updateRocket(dt) {
+        this._stateTimer -= dt;
+        this._fireTimer += dt;
+
+        const playerPos = this._player.position;
+        const dx = playerPos.x - this.position.x;
+        const dz = playerPos.z - this.position.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        const angle = Math.atan2(dx, dz);
+
+        // Slow strafe while firing rockets
+        const speed = this._getSpeed() * 0.6;
+        const strafeX = -Math.cos(angle) * this._strafeDir * speed * dt;
+        const strafeZ = Math.sin(angle) * this._strafeDir * speed * dt;
+
+        const moved = this._moveWithCollision(strafeX, strafeZ);
+        if (!moved) {
+            this._strafeDir *= -1;
+        }
+
+        // Fire rockets at slow interval
+        const fireInterval = this._enraged ? ROCKET_FIRE_INTERVAL * 0.6 : ROCKET_FIRE_INTERVAL;
+        if (this._fireTimer >= fireInterval) {
+            this._fireTimer = 0;
+            this._fireRocketAtPlayer(dist);
+        }
+
+        if (this._stateTimer <= 0) {
+            this.state = BOSS_STATE.PAUSE;
+            this._stateTimer = ATTACK_PAUSE_DURATION;
+            this._fireTimer = 0;
+        }
+    }
+
+    /**
+     * Fire a rocket at the player — high damage + screen shake.
+     * @param {number} distance - Distance to player
+     */
+    _fireRocketAtPlayer(distance) {
+        const rocketDmg = this._typeData.rocketDamage || this._typeData.damage;
+        const [minDmg, maxDmg] = rocketDmg;
+        const baseDamage = Math.floor(Math.random() * (maxDmg - minDmg + 1)) + minDmg;
+
+        // Rockets lose less damage over distance than bullets
+        const finalDamage = distance > 3
+            ? Math.max(minDmg, Math.floor(baseDamage - distance / 4))
+            : baseDamage;
+
+        eventBus.emit('enemy:attack', {
+            enemyId: this._bossId,
+            damage: finalDamage,
+            distance,
+            isRocket: true,
+        });
+
+        // Screen shake on every rocket fire (you FEEL these)
+        eventBus.emit('screen:shake', { intensity: 0.8, duration: 0.3 });
+
+        // Rocket sound cue
+        eventBus.emit('boss:rocket_fire', {
+            x: this.position.x,
+            z: this.position.z,
+        });
     }
 
     /**
@@ -913,8 +1220,8 @@ export class Boss {
         const attacks = this._typeData.attacks || ['strafe_fire', 'charge', 'pause'];
         this._attackCycleCount++;
 
-        // Schabbs summon override: every 3rd cycle (or every cycle when enraged)
-        if (this._bossType === 'schabbs') {
+        // Schabbs/Ubersoldier summon override: every 3rd cycle (or every cycle when enraged)
+        if (this._bossType === 'schabbs' || this._bossType === 'ubersoldier') {
             const summonEvery = this._enraged ? 1 : 3;
             if (this._attackCycleCount % summonEvery === 0 && this._activeSummons < MAX_SUMMONS) {
                 this.state = BOSS_STATE.SUMMON;
@@ -961,6 +1268,15 @@ export class Boss {
                     this._circleAngle = Math.atan2(dz2, dx2);
                 }
                 break;
+            case 'gas_cloud':
+                this.state = BOSS_STATE.GAS_CLOUD;
+                this._stateTimer = GAS_CLOUD_THROW_DURATION;
+                break;
+            case 'rocket':
+                this.state = BOSS_STATE.ROCKET;
+                this._stateTimer = ROCKET_DURATION;
+                this._strafeDir = Math.random() < 0.5 ? STRAFE_LEFT : STRAFE_RIGHT;
+                break;
             default:
                 this.state = BOSS_STATE.STRAFE_FIRE;
                 this._stateTimer = STRAFE_DURATION;
@@ -971,11 +1287,11 @@ export class Boss {
         this._fireTimer = 0;
 
         // Play appropriate animation based on new state
-        if (this.state === BOSS_STATE.STRAFE_FIRE || this.state === BOSS_STATE.CIRCLE_FIRE) {
+        if (this.state === BOSS_STATE.STRAFE_FIRE || this.state === BOSS_STATE.CIRCLE_FIRE || this.state === BOSS_STATE.ROCKET) {
             this._playAnimation('shoot');
         } else if (this.state === BOSS_STATE.CHARGE) {
             this._playAnimation('walk');
-        } else if (this.state === BOSS_STATE.SUMMON) {
+        } else if (this.state === BOSS_STATE.SUMMON || this.state === BOSS_STATE.GAS_CLOUD) {
             this._playAnimation('idle');
         }
     }
@@ -987,10 +1303,14 @@ export class Boss {
      */
     _getSpeed() {
         if (!this._enraged) return this._typeData.speed;
-        // Schabbs doubles speed on enrage; Hitler gets 1.8x; Hans/others get 1.5x
+        // Boss-specific enrage speed multipliers
         let multiplier = 1.5;
         if (this._bossType === 'schabbs') multiplier = 2.0;
         else if (this._bossType === 'hitler') multiplier = 1.8;
+        else if (this._bossType === 'gretel') multiplier = 1.8;  // Gretel goes full predator
+        else if (this._bossType === 'fettgesicht') multiplier = 1.6;  // Even the general gets faster
+        else if (this._bossType === 'otto') multiplier = 1.4;  // Otto relies on gas, not speed
+        else if (this._bossType === 'ubersoldier') multiplier = 1.8;  // THE nightmare
         return this._typeData.speed * multiplier;
     }
 
