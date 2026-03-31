@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+coverage/
+
+# Old source (Infernal Assault legacy)
+src/
+tests/
+docs/
+.husky/
+.eslintrc.js
+babel.config.js
+server.js
+package.json
+package-lock.json
+asset-tester.html
+map_viewer.html
+asset-manifest.json
+
+# Build artifacts
+dist/
+*.listing
+
+# Environment
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Temporary
+*.tmp
+*.bak
+
+# Blender conversion outputs (keep animated/ only)
+assets/models/enemies/obj/
+assets/models/enemies/fbx/

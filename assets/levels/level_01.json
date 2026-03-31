@@ -1,0 +1,12 @@
+{
+  "name": "Level 01",
+  "description": "Placeholder level data",
+  "rooms": [
+    {
+      "id": "room1",
+      "name": "Entry Room",
+      "width": 10,
+      "height": 10
+    }
+  ]
+}

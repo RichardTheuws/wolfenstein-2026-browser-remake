@@ -1,0 +1,452 @@
+{
+    "name": "Multi-Room Test Level",
+    "description": "A test level with multiple rooms and enemies",
+    "playerStart": {
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "rotation": 0
+    },
+    "walls": [
+        {
+            "x": -5,
+            "y": 1,
+            "z": -5,
+            "width": 0.5,
+            "height": 2,
+            "depth": 10,
+            "texture": "wall1"
+        },
+        {
+            "x": 5,
+            "y": 1,
+            "z": -5,
+            "width": 0.5,
+            "height": 2,
+            "depth": 10,
+            "texture": "wall1"
+        },
+        {
+            "x": 0,
+            "y": 1,
+            "z": -10,
+            "width": 10,
+            "height": 2,
+            "depth": 0.5,
+            "texture": "wall2"
+        },
+        {
+            "x": 0,
+            "y": 1,
+            "z": 0,
+            "width": 10,
+            "height": 2,
+            "depth": 0.5,
+            "texture": "wall2"
+        },
+        {
+            "x": -2.5,
+            "y": 1,
+            "z": -5,
+            "width": 0.5,
+            "height": 2,
+            "depth": 9.5,
+            "texture": "wall3"
+        },
+        {
+            "x": 2.5,
+            "y": 1,
+            "z": -5,
+            "width": 0.5,
+            "height": 2,
+            "depth": 9.5,
+            "texture": "wall4"
+        },
+        {
+            "x": 0,
+            "y": 1,
+            "z": 5,
+            "width": 2,
+            "height": 2,
+            "depth": 10,
+            "texture": "wall1"
+        },
+        {
+            "x": 3,
+            "y": 1,
+            "z": 5,
+            "width": 2,
+            "height": 2,
+            "depth": 10,
+            "texture": "wall1"
+        },
+        {
+            "x": 15,
+            "y": 1,
+            "z": 5,
+            "width": 10,
+            "height": 2,
+            "depth": 0.5,
+            "texture": "wall2"
+        },
+        {
+            "x": 15,
+            "y": 1,
+            "z": 15,
+            "width": 10,
+            "height": 2,
+            "depth": 0.5,
+            "texture": "wall2"
+        },
+        {
+            "x": 10,
+            "y": 1,
+            "z": 10,
+            "width": 0.5,
+            "height": 2,
+            "depth": 10,
+            "texture": "wall3"
+        },
+        {
+            "x": 20,
+            "y": 1,
+            "z": 10,
+            "width": 0.5,
+            "height": 2,
+            "depth": 10,
+            "texture": "wall3"
+        },
+        {
+            "x": -5,
+            "y": 1,
+            "z": -15,
+            "width": 0.5,
+            "height": 2,
+            "depth": 10,
+            "texture": "wall4"
+        },
+        {
+            "x": -10,
+            "y": 1,
+            "z": -15,
+            "width": 0.5,
+            "height": 2,
+            "depth": 10,
+            "texture": "wall4"
+        },
+        {
+            "x": -15,
+            "y": 1,
+            "z": -25,
+            "width": 10,
+            "height": 2,
+            "depth": 0.5,
+            "texture": "wall1"
+        },
+        {
+            "x": -15,
+            "y": 1,
+            "z": -15,
+            "width": 10,
+            "height": 2,
+            "depth": 0.5,
+            "texture": "wall1"
+        },
+        {
+            "x": -20,
+            "y": 1,
+            "z": -20,
+            "width": 0.5,
+            "height": 2,
+            "depth": 10,
+            "texture": "wall2"
+        },
+        {
+            "x": -10,
+            "y": 1,
+            "z": -20,
+            "width": 0.5,
+            "height": 2,
+            "depth": 10,
+            "texture": "wall2"
+        }
+    ],
+    "floors": [
+        {
+            "x": 0,
+            "y": 0,
+            "z": -5,
+            "width": 10,
+            "depth": 10,
+            "texture": "floor"
+        },
+        {
+            "x": 1.5,
+            "y": 0,
+            "z": 5,
+            "width": 3,
+            "depth": 10,
+            "texture": "floor"
+        },
+        {
+            "x": 15,
+            "y": 0,
+            "z": 10,
+            "width": 10,
+            "depth": 10,
+            "texture": "floor"
+        },
+        {
+            "x": -7.5,
+            "y": 0,
+            "z": -15,
+            "width": 3,
+            "depth": 10,
+            "texture": "floor"
+        },
+        {
+            "x": -15,
+            "y": 0,
+            "z": -20,
+            "width": 10,
+            "depth": 10,
+            "texture": "floor"
+        }
+    ],
+    "ceilings": [
+        {
+            "x": 0,
+            "y": 2,
+            "z": -5,
+            "width": 10,
+            "depth": 10,
+            "texture": "ceiling"
+        },
+        {
+            "x": 1.5,
+            "y": 2,
+            "z": 5,
+            "width": 3,
+            "depth": 10,
+            "texture": "ceiling"
+        },
+        {
+            "x": 15,
+            "y": 2,
+            "z": 10,
+            "width": 10,
+            "depth": 10,
+            "texture": "ceiling"
+        },
+        {
+            "x": -7.5,
+            "y": 2,
+            "z": -15,
+            "width": 3,
+            "depth": 10,
+            "texture": "ceiling"
+        },
+        {
+            "x": -15,
+            "y": 2,
+            "z": -20,
+            "width": 10,
+            "depth": 10,
+            "texture": "ceiling"
+        }
+    ],
+    "doors": [
+        {
+            "x": 0,
+            "y": 1,
+            "z": -5,
+            "width": 1.5,
+            "height": 2,
+            "depth": 0.5,
+            "color": "0x663300",
+            "requiredKey": null,
+            "orientation": "horizontal"
+        },
+        {
+            "x": 0,
+            "y": 1,
+            "z": 0.25,
+            "width": 1.5,
+            "height": 2,
+            "depth": 0.5,
+            "color": "0x663300",
+            "requiredKey": null,
+            "orientation": "horizontal"
+        },
+        {
+            "x": 10.25,
+            "y": 1,
+            "z": 5,
+            "width": 0.5,
+            "height": 2,
+            "depth": 1.5,
+            "color": "0x663300",
+            "requiredKey": "red",
+            "orientation": "vertical"
+        },
+        {
+            "x": -5.25,
+            "y": 1,
+            "z": -10,
+            "width": 0.5,
+            "height": 2,
+            "depth": 1.5,
+            "color": "0x663300",
+            "requiredKey": null,
+            "orientation": "vertical"
+        }
+    ],
+    "enemies": [
+        {
+            "x": -3,
+            "y": 1,
+            "z": -7,
+            "type": "soldier",
+            "facing": 0.785,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": 15,
+            "y": 1,
+            "z": 7,
+            "type": "soldier",
+            "facing": 1.57,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": 18,
+            "y": 1,
+            "z": 12,
+            "type": "demon",
+            "facing": 3.14,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": -15,
+            "y": 1,
+            "z": -18,
+            "type": "demon",
+            "facing": 0,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": -18,
+            "y": 1,
+            "z": -22,
+            "type": "turret",
+            "facing": 0.785,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": -12,
+            "y": 1,
+            "z": -22,
+            "type": "soldier",
+            "facing": 5.497,
+            "patrol": null,
+            "dormant": false
+        }
+    ],
+    "items": [
+        {
+            "x": -3.5,
+            "y": 0.5,
+            "z": -2.5,
+            "type": "health_small"
+        },
+        {
+            "x": 3.5,
+            "y": 0.5,
+            "z": -2.5,
+            "type": "armor_small"
+        },
+        {
+            "x": -3.5,
+            "y": 0.5,
+            "z": -7.5,
+            "type": "key_red"
+        },
+        {
+            "x": 15,
+            "y": 0.5,
+            "z": 10,
+            "type": "weapon_shotgun"
+        },
+        {
+            "x": 17,
+            "y": 0.5,
+            "z": 8,
+            "type": "ammo_shotgun"
+        },
+        {
+            "x": 13,
+            "y": 0.5,
+            "z": 12,
+            "type": "weapon_machinegun"
+        },
+        {
+            "x": -15,
+            "y": 0.5,
+            "z": -20,
+            "type": "health_large"
+        },
+        {
+            "x": -17,
+            "y": 0.5,
+            "z": -18,
+            "type": "armor_large"
+        },
+        {
+            "x": -13,
+            "y": 0.5,
+            "z": -18,
+            "type": "key_blue"
+        }
+    ],
+    "secrets": [
+        {
+            "x": 19,
+            "y": 1,
+            "z": 14,
+            "width": 0.5,
+            "height": 2,
+            "depth": 1,
+            "color": "0x808080",
+            "message": "You found a secret weapon!",
+            "item": "weapon_plasma"
+        },
+        {
+            "x": -19,
+            "y": 1,
+            "z": -18,
+            "width": 1,
+            "height": 2,
+            "depth": 0.5,
+            "color": "0x808080",
+            "message": "You found a secret armor cache!",
+            "item": "armor_large"
+        }
+    ],
+    "exits": [
+        {
+            "x": -15,
+            "y": 1,
+            "z": -24,
+            "width": 2,
+            "height": 2,
+            "depth": 1,
+            "nextLevel": 1,
+            "message": "Level Complete! Moving to next area..."
+        }
+    ]
+}

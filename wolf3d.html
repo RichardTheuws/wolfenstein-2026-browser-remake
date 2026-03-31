@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Wolfenstein 3D — 2026 Browser Remake | Play Free</title>
+
+    <!-- SEO Meta -->
+    <meta name="description" content="Play Wolfenstein 3D reimagined for 2026 — right in your browser. 3 episodes, 15 levels, 3 epic boss fights, AI-generated 3D enemies, German voice acting, and an original soundtrack. Built with Three.js, Meshy, ElevenLabs & Suno AI.">
+    <meta name="keywords" content="Wolfenstein 3D, browser game, FPS, first person shooter, Three.js, WebGL, retro game, Castle Wolfenstein, free game, AI generated">
+    <meta name="author" content="Richard Theuws & Claude AI — Theuws Consulting">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://theuws.com/games/wolfenstein-3d/">
+
+    <!-- Open Graph (Facebook, LinkedIn, Discord, etc.) -->
+    <meta property="og:title" content="Wolfenstein 3D — 2026 Browser Remake">
+    <meta property="og:description" content="Castle Wolfenstein reimagined. 3 episodes, 15 levels, 3 boss fights — playable in your browser. Built in 6 hours with AI. Free to play.">
+    <meta property="og:image" content="https://theuws.com/games/wolfenstein-3d/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Wolfenstein 3D 2026 Browser Remake — soldier facing Castle Wolfenstein at night">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://theuws.com/games/wolfenstein-3d/">
+    <meta property="og:site_name" content="Theuws Games">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Wolfenstein 3D — 2026 Browser Remake">
+    <meta name="twitter:description" content="Play the classic FPS reimagined with AI — 3D enemies, German voice acting, original soundtrack. Free in your browser.">
+    <meta name="twitter:image" content="https://theuws.com/games/wolfenstein-3d/og-image.jpg">
+
+    <!-- Structured Data (Schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Wolfenstein 3D — 2026 Browser Remake",
+        "description": "A faithful browser-based remake of the classic 1992 FPS Wolfenstein 3D, built with Three.js and AI-generated assets including 3D models, voice acting, and an original soundtrack.",
+        "url": "https://theuws.com/games/wolfenstein-3d/",
+        "image": "https://theuws.com/games/wolfenstein-3d/og-image.jpg",
+        "genre": ["First-person shooter", "Retro", "Action"],
+        "gamePlatform": "Web Browser",
+        "applicationCategory": "Game",
+        "operatingSystem": "Any (browser-based)",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "EUR"
+        },
+        "author": [
+            {
+                "@type": "Person",
+                "name": "Richard Theuws",
+                "url": "https://theuws.com",
+                "jobTitle": "Creative Director",
+                "worksFor": {
+                    "@type": "Organization",
+                    "name": "Theuws Consulting"
+                }
+            },
+            {
+                "@type": "SoftwareApplication",
+                "name": "Claude Opus 4.6",
+                "description": "AI Game Master by Anthropic",
+                "applicationCategory": "AI Assistant"
+            }
+        ],
+        "datePublished": "2026-03-30",
+        "inLanguage": ["en", "de"],
+        "numberOfEpisodes": 3,
+        "numberOfLevels": 15
+    }
+    </script>
+
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="css/wolf3d.css">
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="js/main.js"></script>
+</head>
+<body>
+
+    <!-- ============================================================ -->
+    <!-- 1. LOADING SCREEN                                            -->
+    <!-- ============================================================ -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h1 class="loading-title">Wolfenstein 3D</h1>
+            <p class="loading-subtitle">Loading Castle Wolfenstein...</p>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <p class="progress-text" id="progress-text">0%</p>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 2. MAIN MENU                                                 -->
+    <!-- ============================================================ -->
+    <div id="main-menu" class="screen hidden">
+        <div class="menu-background"></div>
+        <div class="menu-content">
+            <div class="menu-header">
+                <h1 class="menu-title">Wolfenstein 3D</h1>
+                <p class="menu-subtitle">A Browser Remake</p>
+            </div>
+            <nav class="menu-buttons">
+                <button class="btn btn-primary btn-large" id="btn-new-game">NEW GAME</button>
+                <button class="btn btn-primary btn-large" id="btn-continue" style="display:none">CONTINUE</button>
+                <button class="btn btn-secondary" id="btn-options">OPTIONS</button>
+                <button class="btn btn-secondary" id="btn-credits">CREDITS</button>
+            </nav>
+            <p class="menu-footer">theuws.com/games</p>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 3. EPISODE SELECT                                            -->
+    <!-- ============================================================ -->
+    <div id="episode-select" class="screen hidden">
+        <div class="screen-inner">
+            <h2 class="screen-title">Select Episode</h2>
+            <div class="episode-grid">
+                <button class="episode-card" data-episode="1">
+                    <span class="episode-number">Episode 1</span>
+                    <span class="episode-name">Escape from Castle Wolfenstein</span>
+                    <span class="episode-desc">Imprisoned deep within the Nazi fortress, you must fight your way to freedom.</span>
+                </button>
+                <button class="episode-card" data-episode="2">
+                    <span class="episode-number">Episode 2</span>
+                    <span class="episode-name">Operation Eisenfaust</span>
+                    <span class="episode-desc">Rumors of gruesome experiments lead you into the heart of a secret project.</span>
+                </button>
+                <button class="episode-card" data-episode="3">
+                    <span class="episode-number">Episode 3</span>
+                    <span class="episode-name">Die, F&uuml;hrer, Die!</span>
+                    <span class="episode-desc">The ultimate mission: infiltrate the bunker and confront the tyrant himself.</span>
+                </button>
+                <button class="episode-card" data-episode="4">
+                    <span class="episode-number">Episode 4</span>
+                    <span class="episode-name">A Dark Secret</span>
+                    <span class="episode-desc">A nocturnal prequel — uncover the dark secrets hidden beneath the castle.</span>
+                    <span class="episode-badge">COMING SOON</span>
+                </button>
+                <button class="episode-card" data-episode="5">
+                    <span class="episode-number">Episode 5</span>
+                    <span class="episode-name">Trail of the Madman</span>
+                    <span class="episode-desc">Track a deranged scientist through corridors of madness and mutation.</span>
+                    <span class="episode-badge">COMING SOON</span>
+                </button>
+                <button class="episode-card" data-episode="6">
+                    <span class="episode-number">Episode 6</span>
+                    <span class="episode-name">Confrontation</span>
+                    <span class="episode-desc">The final showdown. Every enemy, every trap — nothing stands between you and victory.</span>
+                    <span class="episode-badge">COMING SOON</span>
+                </button>
+            </div>
+            <button class="btn btn-back" id="btn-episode-back">&#9664; BACK</button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 4. DIFFICULTY SELECT                                         -->
+    <!-- ============================================================ -->
+    <div id="difficulty-select" class="screen hidden">
+        <div class="screen-inner">
+            <h2 class="screen-title">How Tough Are You?</h2>
+            <div class="difficulty-list">
+                <button class="difficulty-card" data-difficulty="baby">
+                    <span class="difficulty-face difficulty-face--green"><img src="assets/ui/faces/bj_baby.png" alt="BJ"></span>
+                    <span class="difficulty-label">Can I play, Daddy?</span>
+                </button>
+                <button class="difficulty-card" data-difficulty="easy">
+                    <span class="difficulty-face difficulty-face--yellow"><img src="assets/ui/faces/bj_easy.png" alt="BJ"></span>
+                    <span class="difficulty-label">Don't hurt me.</span>
+                </button>
+                <button class="difficulty-card" data-difficulty="medium">
+                    <span class="difficulty-face difficulty-face--orange"><img src="assets/ui/faces/bj_medium.png" alt="BJ"></span>
+                    <span class="difficulty-label">Bring 'em on!</span>
+                </button>
+                <button class="difficulty-card" data-difficulty="hard">
+                    <span class="difficulty-face difficulty-face--red"><img src="assets/ui/faces/bj_hard.png" alt="BJ"></span>
+                    <span class="difficulty-label">I am Death incarnate!</span>
+                </button>
+            </div>
+            <button class="btn btn-back" id="btn-difficulty-back">&#9664; BACK</button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 5. GAME CANVAS                                               -->
+    <!-- ============================================================ -->
+    <canvas id="game-canvas" class="hidden"></canvas>
+
+    <!-- ============================================================ -->
+    <!-- 5b. CROSSHAIR                                                -->
+    <!-- ============================================================ -->
+    <div id="crosshair" class="hidden">
+        <div class="crosshair-dot"></div>
+    </div>
+    <div id="hit-marker" class="hidden"></div>
+
+    <!-- ============================================================ -->
+    <!-- 6. GAME HUD                                                  -->
+    <!-- ============================================================ -->
+    <div id="game-hud" class="hidden">
+        <div class="hud-bar">
+            <div class="hud-item hud-floor">
+                <span class="hud-label">FLOOR</span>
+                <span class="hud-value" id="hud-floor">1</span>
+                <span class="hud-par-time" id="hud-par-time"></span>
+            </div>
+            <div class="hud-item hud-score">
+                <span class="hud-label">SCORE</span>
+                <span class="hud-value" id="hud-score">0</span>
+            </div>
+            <div class="hud-item hud-face">
+                <div class="hud-face-frame" id="hud-face">&#128522;</div>
+            </div>
+            <div class="hud-item hud-lives">
+                <span class="hud-label">LIVES</span>
+                <span class="hud-value" id="hud-lives">3</span>
+            </div>
+            <div class="hud-item hud-health">
+                <span class="hud-label">HEALTH</span>
+                <div class="hud-health-bar">
+                    <div class="hud-health-fill" id="hud-health-fill"></div>
+                </div>
+                <span class="hud-value hud-health-number" id="hud-health">100</span>
+            </div>
+            <div class="hud-item hud-ammo">
+                <span class="hud-label">AMMO</span>
+                <span class="hud-value" id="hud-ammo">8</span>
+            </div>
+            <div class="hud-item hud-keys">
+                <span class="hud-label">KEYS</span>
+                <div class="hud-key-icons">
+                    <span class="hud-key hud-key--gold" id="hud-key-gold"></span>
+                    <span class="hud-key hud-key--silver" id="hud-key-silver"></span>
+                </div>
+            </div>
+            <div class="hud-item hud-weapon">
+                <span class="hud-label">WEAPON</span>
+                <span class="hud-value" id="hud-weapon">PISTOL</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 7. PAUSE MENU                                                -->
+    <!-- ============================================================ -->
+    <div id="pause-menu" class="screen hidden">
+        <div class="pause-overlay">
+            <h2 class="pause-title">PAUSED</h2>
+            <nav class="pause-buttons">
+                <button class="btn btn-primary" id="btn-resume">RESUME</button>
+                <button class="btn btn-secondary" id="btn-restart">RESTART LEVEL</button>
+                <button class="btn btn-secondary" id="btn-pause-options">OPTIONS</button>
+                <button class="btn btn-danger" id="btn-quit">QUIT TO MENU</button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 8. MOBILE CONTROLS                                           -->
+    <!-- ============================================================ -->
+    <div id="mobile-controls" class="hidden">
+        <div class="mobile-left">
+            <div class="joystick-area" id="joystick-area">
+                <div class="joystick-ring">
+                    <div class="joystick-knob" id="joystick-knob"></div>
+                </div>
+            </div>
+        </div>
+        <div class="mobile-right">
+            <button class="mobile-btn mobile-btn--fire" id="btn-fire">FIRE</button>
+            <button class="mobile-btn mobile-btn--weapon" id="btn-weapon-switch">WPN</button>
+            <button class="mobile-btn mobile-btn--interact" id="btn-interact">USE</button>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,281 @@
+@font-face {
+    font-family: 'Doom';
+    src: url('../assets/fonts/doom.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Doom', Arial, sans-serif;
+    background-color: #000;
+    color: #fff;
+    user-select: none;
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: none;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.menu-content {
+    text-align: center;
+    width: 80%;
+    max-width: 600px;
+}
+
+h1, h2 {
+    color: #a00;
+    text-shadow: 0 0 10px #f00;
+    margin-bottom: 30px;
+    font-size: 3rem;
+}
+
+h2 {
+    font-size: 2.5rem;
+}
+
+button {
+    background-color: #222;
+    border: 2px solid #a00;
+    color: #fff;
+    padding: 10px 20px;
+    margin: 10px;
+    font-family: 'Doom', Arial, sans-serif;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    max-width: 300px;
+}
+
+button:hover {
+    background-color: #a00;
+    border-color: #f00;
+    transform: scale(1.05);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Loading Screen */
+#loading-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 1000;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.loading-bar-container {
+    width: 80%;
+    max-width: 500px;
+    height: 30px;
+    border: 2px solid #a00;
+    margin: 20px auto;
+}
+
+#loading-bar {
+    height: 100%;
+    width: 0%;
+    background-color: #a00;
+    transition: width 0.3s;
+}
+
+/* Game UI */
+#game-ui {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    pointer-events: none;
+}
+
+#health-bar, #armor-bar {
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #a00;
+    padding: 5px 10px;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.label {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.bar-container {
+    width: 150px;
+    height: 20px;
+    background-color: #222;
+    margin-right: 10px;
+}
+
+#health-value, #armor-value {
+    height: 100%;
+    width: 100%;
+    transition: width 0.3s;
+}
+
+#health-value {
+    background-color: #a00;
+}
+
+#armor-value {
+    background-color: #00a;
+}
+
+#health-number, #armor-number {
+    font-size: 1.2rem;
+    width: 40px;
+    text-align: right;
+}
+
+#ammo-display, #weapon-display {
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #a00;
+    padding: 5px 10px;
+    margin-right: 20px;
+    text-align: center;
+}
+
+#ammo-count, #current-weapon {
+    font-size: 1.5rem;
+}
+
+#crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    color: #a00;
+    text-shadow: 0 0 5px #f00;
+    pointer-events: none;
+}
+
+/* Mobile Controls */
+#mobile-controls {
+    position: absolute;
+    bottom: 30px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: auto;
+}
+
+#movement-pad, #look-pad {
+    position: relative;
+    width: 150px;
+    height: 150px;
+}
+
+#movement-area, #look-area {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+#movement-thumb, #look-thumb {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: rgba(255, 0, 0, 0.5);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#mobile-fire, #mobile-weapon-switch, #mobile-action {
+    pointer-events: auto;
+    width: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2rem;
+    }
+    
+    button {
+        font-size: 1.2rem;
+        padding: 8px 16px;
+    }
+    
+    #health-bar, #armor-bar, #ammo-display, #weapon-display {
+        padding: 3px 6px;
+        margin-bottom: 10px;
+    }
+    
+    .bar-container {
+        width: 100px;
+    }
+    
+    .label, #health-number, #armor-number {
+        font-size: 1rem;
+    }
+    
+    #ammo-count, #current-weapon {
+        font-size: 1.2rem;
+    }
+}
+
+/* Stats display */
+.stats {
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #a00;
+    padding: 15px;
+    margin: 20px 0;
+    text-align: left;
+}
+
+.stats p {
+    margin: 5px 0;
+    font-size: 1.2rem;
+}

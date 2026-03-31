@@ -1,0 +1,46 @@
+# Wolfenstein 3D — 2026 Browser Remake
+
+> A faithful browser-based remake of the classic 1992 FPS Wolfenstein 3D, reimagined with 2026 AI technology.
+
+## About
+This game was built by Richard Theuws (Creative Director, theuws.com) and Claude Opus 4.6 (AI Game Master by Anthropic) in approximately 6 hours of development time. It demonstrates the power of human-AI collaboration in game development.
+
+## Play
+- URL: https://theuws.com/games/wolfenstein-3d/
+- Platform: Any modern web browser (Chrome, Firefox, Safari, Edge)
+- Cost: Free to play
+- Controls: WASD + Mouse (desktop), Touch joystick (mobile)
+
+## Game Content
+- 3 episodes: "Escape from Castle Wolfenstein", "Operation Eisenfaust", "Die, Führer, Die!"
+- 15 playable levels with increasing difficulty
+- 3 boss fights: Hans Grösse, Dr. Schabbs, Hitler (2-phase mech suit + human)
+- 5 enemy types: Guard, SS Soldier, Officer, Dog, Mutant
+- 4 weapons: Knife, Luger P08 pistol, MP40 submachine gun, Chain gun
+- Classic cheat codes: GOD, GUNS, KEYS, MAP, FPS
+
+## Technology Stack
+- Three.js r170 (WebGL 3D engine)
+- 33 ES6 JavaScript modules, 13,200+ lines of code
+- No build step — pure HTML/JS, deployable anywhere
+
+## AI-Generated Assets
+- 7 animated 3D enemy models (Meshy v6 via fal.ai + Blender 5.1 rigging)
+- 30+ textures and sprites (Flux via fal.ai)
+- 15+ German voice lines (ElevenLabs, eleven_multilingual_v2)
+- 11 original music tracks (Suno AI)
+- 16+ sound effects (ElevenLabs Sound Generation)
+- Total AI generation cost: approximately $6 USD
+
+## Creator
+Richard Theuws — Founder of Theuws Consulting
+- Website: https://theuws.com
+- Location: Bladel, Netherlands
+- Background: 25+ years entrepreneurship, founder of Metal Business Club (170+ entrepreneurs)
+
+## AI Game Master
+Claude Opus 4.6 by Anthropic — served as project manager, creative director, and technical architect.
+7 specialized sub-agents: Game Analyzer, Asset Generator, 3D Animation Director, Audio Director, Scenario Writer, Game Deployer, Game Master Improvement.
+
+## Source
+Part of a portfolio of 29+ browser games at https://theuws.com/games/

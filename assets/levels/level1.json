@@ -1,0 +1,190 @@
+{
+    "name": "Level 1: Entrance",
+    "description": "The entrance to the facility",
+    "playerStart": {
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "rotation": 0
+    },
+    "walls": [
+        {
+            "x": 0,
+            "y": 1,
+            "z": -10,
+            "width": 20,
+            "height": 2,
+            "depth": 0.5,
+            "texture": "wall1"
+        },
+        {
+            "x": 0,
+            "y": 1,
+            "z": 10,
+            "width": 20,
+            "height": 2,
+            "depth": 0.5,
+            "texture": "wall1"
+        },
+        {
+            "x": -10,
+            "y": 1,
+            "z": 0,
+            "width": 0.5,
+            "height": 2,
+            "depth": 20,
+            "texture": "wall1"
+        },
+        {
+            "x": 10,
+            "y": 1,
+            "z": 0,
+            "width": 0.5,
+            "height": 2,
+            "depth": 20,
+            "texture": "wall1"
+        },
+        {
+            "x": -5,
+            "y": 1,
+            "z": 0,
+            "width": 0.5,
+            "height": 2,
+            "depth": 15,
+            "texture": "wall2"
+        },
+        {
+            "x": 5,
+            "y": 1,
+            "z": -5,
+            "width": 10,
+            "height": 2,
+            "depth": 0.5,
+            "texture": "wall2"
+        }
+    ],
+    "floors": [
+        {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "width": 20,
+            "depth": 20,
+            "texture": "floor"
+        }
+    ],
+    "ceilings": [
+        {
+            "x": 0,
+            "y": 2,
+            "z": 0,
+            "width": 20,
+            "depth": 20,
+            "texture": "ceiling"
+        }
+    ],
+    "doors": [
+        {
+            "x": -5,
+            "y": 1,
+            "z": -7,
+            "width": 0.5,
+            "height": 2,
+            "depth": 1.5,
+            "color": "0x663300",
+            "requiredKey": null,
+            "orientation": "vertical"
+        },
+        {
+            "x": 5,
+            "y": 1,
+            "z": 5,
+            "width": 1.5,
+            "height": 2,
+            "depth": 0.5,
+            "color": "0x663300",
+            "requiredKey": "blue",
+            "orientation": "horizontal"
+        }
+    ],
+    "enemies": [
+        {
+            "x": -7,
+            "y": 1,
+            "z": -7,
+            "type": "soldier",
+            "facing": 0.785,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": 7,
+            "y": 1,
+            "z": 7,
+            "type": "demon",
+            "facing": 3.927,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": -7,
+            "y": 1,
+            "z": 7,
+            "type": "turret",
+            "facing": 2.356,
+            "patrol": null,
+            "dormant": true
+        }
+    ],
+    "items": [
+        {
+            "x": 2,
+            "y": 0.5,
+            "z": 2,
+            "type": "health_small"
+        },
+        {
+            "x": -2,
+            "y": 0.5,
+            "z": -2,
+            "type": "armor_small"
+        },
+        {
+            "x": 7,
+            "y": 0.5,
+            "z": -7,
+            "type": "weapon_shotgun"
+        },
+        {
+            "x": -8,
+            "y": 0.5,
+            "z": 8,
+            "type": "key_blue"
+        }
+    ],
+    "secrets": [
+        {
+            "x": 9,
+            "y": 1,
+            "z": -9,
+            "width": 1,
+            "height": 2,
+            "depth": 1,
+            "color": "0x888888",
+            "message": "You found a secret area!",
+            "item": "weapon_plasma"
+        }
+    ],
+    "exits": [
+        {
+            "x": 9,
+            "y": 1,
+            "z": 9,
+            "width": 1,
+            "height": 2,
+            "depth": 1,
+            "nextLevel": 1,
+            "message": "Level Complete!"
+        }
+    ]
+}

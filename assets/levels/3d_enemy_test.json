@@ -1,0 +1,224 @@
+{
+    "name": "3D Enemy Test Level",
+    "description": "A test level with different 3D enemy models",
+    "playerStart": {
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "rotation": 0
+    },
+    "walls": [
+        {
+            "x": -10,
+            "y": 1,
+            "z": 0,
+            "width": 0.5,
+            "height": 3,
+            "depth": 20,
+            "texture": "wall1"
+        },
+        {
+            "x": 10,
+            "y": 1,
+            "z": 0,
+            "width": 0.5,
+            "height": 3,
+            "depth": 20,
+            "texture": "wall1"
+        },
+        {
+            "x": 0,
+            "y": 1,
+            "z": -10,
+            "width": 20,
+            "height": 3,
+            "depth": 0.5,
+            "texture": "wall2"
+        },
+        {
+            "x": 0,
+            "y": 1,
+            "z": 10,
+            "width": 20,
+            "height": 3,
+            "depth": 0.5,
+            "texture": "wall2"
+        },
+        {
+            "x": -5,
+            "y": 1,
+            "z": 0,
+            "width": 0.5,
+            "height": 3,
+            "depth": 10,
+            "texture": "wall3"
+        },
+        {
+            "x": 0,
+            "y": 1,
+            "z": -5,
+            "width": 10,
+            "height": 3,
+            "depth": 0.5,
+            "texture": "wall3"
+        },
+        {
+            "x": 5,
+            "y": 1,
+            "z": 0,
+            "width": 0.5,
+            "height": 3,
+            "depth": 10,
+            "texture": "wall4"
+        }
+    ],
+    "floors": [
+        {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "width": 20,
+            "depth": 20,
+            "texture": "floor"
+        }
+    ],
+    "ceilings": [
+        {
+            "x": 0,
+            "y": 3,
+            "z": 0,
+            "width": 20,
+            "depth": 20,
+            "texture": "ceiling"
+        }
+    ],
+    "doors": [
+        {
+            "x": 0,
+            "y": 1,
+            "z": 5,
+            "width": 3,
+            "height": 3,
+            "depth": 0.5,
+            "color": "0x663300",
+            "requiredKey": null,
+            "orientation": "horizontal"
+        }
+    ],
+    "enemies": [
+        {
+            "x": -7,
+            "y": 1,
+            "z": -7,
+            "type": "soldier",
+            "facing": 0.785,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": 7,
+            "y": 1,
+            "z": -7,
+            "type": "demon",
+            "facing": 3.927,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": -7,
+            "y": 1,
+            "z": 7,
+            "type": "lycanthrope",
+            "facing": 2.356,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": 7,
+            "y": 1,
+            "z": 7,
+            "type": "commando",
+            "facing": 5.498,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": 0,
+            "y": 1,
+            "z": -7,
+            "type": "red_devil",
+            "facing": 3.141,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": -3,
+            "y": 1,
+            "z": 7,
+            "type": "ninja",
+            "facing": 1.570,
+            "patrol": null,
+            "dormant": false
+        },
+        {
+            "x": 3,
+            "y": 1,
+            "z": 7,
+            "type": "goliath",
+            "facing": 4.712,
+            "patrol": null,
+            "dormant": false
+        }
+    ],
+    "items": [
+        {
+            "x": 2,
+            "y": 0.5,
+            "z": 2,
+            "type": "health_small"
+        },
+        {
+            "x": -2,
+            "y": 0.5,
+            "z": 2,
+            "type": "armor_small"
+        },
+        {
+            "x": 0,
+            "y": 0.5,
+            "z": -2,
+            "type": "weapon_shotgun"
+        },
+        {
+            "x": 3,
+            "y": 0.5,
+            "z": -3,
+            "type": "key_blue"
+        }
+    ],
+    "secrets": [
+        {
+            "x": 9,
+            "y": 1,
+            "z": -9,
+            "width": 1,
+            "height": 2,
+            "depth": 1,
+            "color": "0x888888",
+            "message": "You found a secret weapon!",
+            "item": "weapon_plasma"
+        }
+    ],
+    "exits": [
+        {
+            "x": 0,
+            "y": 1,
+            "z": 9,
+            "width": 4,
+            "height": 2,
+            "depth": 1,
+            "nextLevel": 1,
+            "message": "Level Complete!"
+        }
+    ]
+}
