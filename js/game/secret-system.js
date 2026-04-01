@@ -88,9 +88,6 @@ export class SecretSystem {
         this._gameState.recordSecret();
         this._gameState.addScore(500);
 
-        // Sound placeholder
-        console.log('[SecretSystem] Grinding stone sound — secret found at', secret.x, secret.z);
-
         // Emit event for other systems
         eventBus.emit('secret:found', {
             x: secret.x,

@@ -80,15 +80,9 @@ export class AudioManager {
         document.addEventListener('touchstart', this._unlockHandler, { once: false });
 
         // ── Event Listeners (placeholders until SFX files exist) ────
-        this._onWeaponFire = () => {
-            console.log('[AudioManager] weapon:fire — SFX placeholder');
-        };
-        this._onPickupCollect = (data) => {
-            console.log('[AudioManager] pickup:collect —', data?.label ?? 'unknown');
-        };
-        this._onEnemyDeath = () => {
-            console.log('[AudioManager] enemy:death — SFX placeholder');
-        };
+        this._onWeaponFire = () => {};
+        this._onPickupCollect = () => {};
+        this._onEnemyDeath = () => {};
 
         eventBus.on('weapon:fire', this._onWeaponFire);
         eventBus.on('pickup:collect', this._onPickupCollect);

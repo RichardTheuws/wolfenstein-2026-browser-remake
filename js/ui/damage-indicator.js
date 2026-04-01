@@ -255,6 +255,14 @@ export class DamageIndicator {
                 letter-spacing: 0.1em;
                 line-height: 1.8;
             ">SCORE: <span style="color: #f0c040;">${score}</span> &nbsp;&bull;&nbsp; FLOOR: <span style="color: #f0c040;">${floor}</span></div>
+            <div style="
+                margin-top: 40px;
+                font-size: clamp(0.5rem, 1.2vw, 0.7rem);
+                color: #666;
+                letter-spacing: 0.15em;
+                animation: gameOverBlink 1.5s ease-in-out infinite;
+            ">PRESS ANY KEY TO CONTINUE</div>
+            <style>@keyframes gameOverBlink { 0%, 100% { opacity: 0.6; } 50% { opacity: 0.2; } }</style>
         `;
 
         document.body.appendChild(text);

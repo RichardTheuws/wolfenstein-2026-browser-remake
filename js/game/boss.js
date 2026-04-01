@@ -262,9 +262,6 @@ export class Boss {
         try {
             const result = await Boss._modelLoader.loadModel(url);
             Boss._models.set(type, result);
-            if (result.animations.length > 0) {
-                console.log(`Boss model "${type}": ${result.animations.length} embedded animations (${result.animations.map(a => a.name).join(', ')})`);
-            }
         } catch (err) {
             console.warn(`Boss.preloadModel: Failed to load model for "${type}" from ${url}:`, err);
         }
@@ -447,7 +444,6 @@ export class Boss {
                 }
                 this._mixerAnimator = new EnemyAnimationMixer(this.mesh, clipMap);
                 this._mixerAnimator.play('idle');
-                console.log(`Boss "${this._bossType}" using embedded animations: ${[...clipMap.keys()].join(', ')}`);
             }
         } else {
             // Fallback: placeholder box

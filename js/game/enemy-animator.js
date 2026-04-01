@@ -36,9 +36,9 @@ const ANIM_STATE = {
 
 // ── Amplitude Scales ──────────────────────────────────────────────
 
-/** Box meshes get subtle animations; GLB models get more pronounced ones. */
+/** Box meshes and GLB models both get clearly visible animations. */
 const AMP = {
-    box: 0.2,
+    box: 0.7,
     model: 1.0,
 };
 
@@ -263,16 +263,16 @@ export class EnemyAnimator {
         const amp = this._amp;
         const walkFreq = 3.0; // Hz multiplied by walk cycle
 
-        // Walk bob: up/down translation (subtle head bob)
-        const bob = Math.abs(Math.sin(t * walkFreq * Math.PI)) * 0.015 * amp;
+        // Walk bob: visible up/down bounce
+        const bob = Math.abs(Math.sin(t * walkFreq * Math.PI)) * 0.06 * amp;
         this._targetPosY = bob;
 
-        // Body lean: alternating Z rotation (very slight lean)
-        const lean = Math.sin(t * walkFreq * Math.PI) * (1 * Math.PI / 180) * amp;
+        // Body lean: alternating Z rotation (visible sway)
+        const lean = Math.sin(t * walkFreq * Math.PI) * (5 * Math.PI / 180) * amp;
         this._targetRotZ = lean;
 
-        // Slight forward lean when moving
-        this._targetRotX = (1 * Math.PI / 180) * amp;
+        // Forward lean when moving
+        this._targetRotX = (4 * Math.PI / 180) * amp;
 
         this._targetPosZ = 0;
         this._targetScaleY = 1;
@@ -287,16 +287,16 @@ export class EnemyAnimator {
         const t = this._stateTime;
         const amp = this._amp;
 
-        // Recoil: brief backward push, then recovery
-        if (t < 0.08) {
-            // Recoil phase — brief and snappy
-            this._targetPosZ = -0.01 * amp;
-            this._targetRotX = -(1.5 * Math.PI / 180) * amp;
-            this._flashTarget = 0.3;
-        } else if (t < 0.2) {
+        // Recoil: visible backward kick when firing
+        if (t < 0.1) {
+            // Recoil phase — snappy and visible
+            this._targetPosZ = -0.06 * amp;
+            this._targetRotX = -(8 * Math.PI / 180) * amp;
+            this._flashTarget = 1.0;
+        } else if (t < 0.25) {
             // Recovery phase
             this._targetPosZ = 0;
-            this._targetRotX = 0;
+            this._targetRotX = -(2 * Math.PI / 180) * amp;
             this._flashTarget = 0;
         } else {
             // Hold steady (idle-like breathing while in attack stance)
@@ -314,21 +314,24 @@ export class EnemyAnimator {
         const t = this._stateTime;
         const amp = this._amp;
 
-        if (t < 0.1) {
-            // Subtle flinch backward
-            this._targetRotX = -(3 * Math.PI / 180) * amp;
-            // Small random lateral stagger
-            this._targetRotZ = (Math.random() - 0.5) * (2 * Math.PI / 180) * amp;
-            this._flashTarget = 0.3;
-        } else if (t < 0.2) {
+        if (t < 0.12) {
+            // Hard flinch backward — clearly visible
+            this._targetRotX = -(15 * Math.PI / 180) * amp;
+            this._targetPosZ = -0.08 * amp;
+            // Random lateral stagger
+            this._targetRotZ = (Math.random() - 0.5) * (10 * Math.PI / 180) * amp;
+            this._flashTarget = 1.0;
+        } else if (t < 0.25) {
             // Spring back
-            this._targetRotX = 0;
+            this._targetRotX = -(5 * Math.PI / 180) * amp;
+            this._targetPosZ = -0.02 * amp;
             this._targetRotZ = 0;
-            this._flashTarget = 0;
+            this._flashTarget = 0.3;
         } else {
-            // Return to idle-like
+            // Recover
             this._targetRotX = 0;
             this._targetRotZ = 0;
+            this._targetPosZ = 0;
             this._flashTarget = 0;
         }
 
@@ -352,23 +355,33 @@ export class EnemyAnimator {
     _die(dt) {
         const t = this._stateTime;
 
-        if (t < 0.3) {
-            // Phase 1: tilt backward slightly (additive to enemy.js rotation)
-            const progress = t / 0.3;
-            this._targetRotX = -(5 * Math.PI / 180) * progress;
-            this._targetRotZ = 0;
-            this._targetPosY = 0;
-        } else if (t < 0.8) {
-            // Phase 2: add sideways lean
-            const progress = (t - 0.3) / 0.5;
-            this._targetRotX = -(5 * Math.PI / 180);
-            this._targetRotZ = (15 * Math.PI / 180) * progress;
-            this._targetPosY = 0;
-        } else if (t < 1.2) {
-            // Phase 3: settle — hold final pose
-            this._targetRotX = -(5 * Math.PI / 180);
-            this._targetRotZ = (15 * Math.PI / 180);
-            this._targetPosY = 0;
+        if (t < 0.2) {
+            // Phase 1: stumble backward — hit hard
+            const progress = t / 0.2;
+            this._targetRotX = -(20 * Math.PI / 180) * progress;
+            this._targetRotZ = (8 * Math.PI / 180) * progress;
+            this._targetPosZ = -0.1 * progress;
+            this._targetPosY = 0.05 * progress;
+        } else if (t < 0.5) {
+            // Phase 2: knees buckle — drop down
+            const progress = (t - 0.2) / 0.3;
+            this._targetRotX = -(20 + 40 * progress) * Math.PI / 180;
+            this._targetRotZ = (8 + 15 * progress) * Math.PI / 180;
+            this._targetPosY = 0.05 - 0.4 * progress;
+            this._targetPosZ = -0.1 - 0.05 * progress;
+        } else if (t < 0.9) {
+            // Phase 3: collapse forward to ground
+            const progress = (t - 0.5) / 0.4;
+            this._targetRotX = -(60 + 20 * progress) * Math.PI / 180;
+            this._targetRotZ = (23 - 5 * progress) * Math.PI / 180;
+            this._targetPosY = -0.35 - 0.3 * progress;
+            this._targetPosZ = -0.15 + 0.05 * progress;
+        } else if (t < 1.5) {
+            // Phase 4: settled on ground — hold final pose
+            this._targetRotX = -80 * Math.PI / 180;
+            this._targetRotZ = 18 * Math.PI / 180;
+            this._targetPosY = -0.65;
+            this._targetPosZ = -0.1;
         } else {
             // Animation complete — freeze
             this._deathFinished = true;
@@ -506,9 +519,9 @@ export class EnemyAnimator {
         const intensity = this._flashIntensity;
         const isPain = this._state === ANIM_STATE.PAIN;
 
-        // Very subtle flash colors (0x080400 for attack, 0x100000 for pain at full intensity)
-        const r = isPain ? intensity * 0.063 : intensity * 0.031;  // 0x10/255 and 0x08/255
-        const g = isPain ? 0 : intensity * 0.016;                   // 0x04/255
+        // Visible flash colors: pain = bright red, attack = orange muzzle flash
+        const r = isPain ? intensity * 0.8 : intensity * 0.6;
+        const g = isPain ? intensity * 0.1 : intensity * 0.3;
         const b = 0;
 
         if (this._isModel) {

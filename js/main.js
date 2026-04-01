@@ -93,6 +93,12 @@ let levelExit = null;
 /** @type {Boss} */
 let boss = null;
 
+/** @type {HTMLDivElement|null} Gas overlay for Otto Giftmacher */
+let gasOverlay = null;
+
+/** @type {THREE.Mesh[]} Active 3D gas cloud meshes */
+const gasCloudMeshes = [];
+
 /** @type {SaveSystem} */
 let saveSystem = null;
 
@@ -241,7 +247,6 @@ async function boot() {
     Enemy.setModelLoader(modelLoader);
     try {
         await Enemy.preloadModel('guard', 'assets/models/animated/guard.glb');
-        console.log('Guard 3D animated model loaded');
     } catch {
         console.warn('Guard model not available, using placeholder boxes');
     }
@@ -263,6 +268,8 @@ async function boot() {
     const bossModelMap = {
         hitler_mech: 'hitler_mech',
         hitler: 'hitler',
+        hans: 'hans',
+        schabbs: 'schabbs',
         otto: 'otto',
         gretel: 'gretel',
         fettgesicht: 'fettgesicht',
@@ -272,12 +279,8 @@ async function boot() {
         Boss.preloadModel(type, `assets/models/animated/${filename}.glb`).catch(() => {});
     });
 
-    // Mixamo skeletal animation loader (non-blocking — falls back to procedural if not found)
-    const animationLoader = new AnimationLoader();
-    Enemy.setAnimationLoader(animationLoader);
-    animationLoader.preloadAll().catch(() => {
-        console.log('No Mixamo animations found, using procedural animations');
-    });
+    // Skeletal animations are embedded in GLB models (loaded via Enemy.preloadModel above).
+    // No separate Mixamo FBX loading needed.
 
     enemyManager.spawnFromLevel(levelLoader.entities);
     weaponSystem.setEnemyMeshes(enemyManager.getEnemyMeshes());
@@ -911,6 +914,7 @@ function wireEvents() {
         try {
             // Stop current game loop during level load
             stopGameLoop();
+            player.enabled = false;
 
             // Clean up previous boss if any
             if (boss) {
@@ -926,6 +930,34 @@ function wireEvents() {
             }
             gasCloudMeshes.length = 0;
             if (gasOverlay) gasOverlay.style.opacity = '0';
+
+            // Smooth transition: fade to black → show floor title → load → fade in
+            const transition = document.createElement('div');
+            transition.style.cssText = `
+                position: fixed; inset: 0; background: #000; z-index: 9998;
+                opacity: 0; transition: opacity 0.4s ease-in;
+                display: flex; align-items: center; justify-content: center;
+                font-family: "Press Start 2P", "Courier New", monospace;
+            `;
+            transition.innerHTML = `
+                <div style="text-align: center; opacity: 0; transition: opacity 0.3s ease-in 0.3s;" id="floor-title">
+                    <div style="color: #c0392b; font-size: 14px; letter-spacing: 4px; margin-bottom: 8px;">
+                        EPISODE ${data.episode}
+                    </div>
+                    <div style="color: #f0c040; font-size: 22px; letter-spacing: 3px;">
+                        FLOOR ${nextFloor === 10 ? 'BOSS' : nextFloor}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(transition);
+            requestAnimationFrame(() => {
+                transition.style.opacity = '1';
+                const title = document.getElementById('floor-title');
+                if (title) title.style.opacity = '1';
+            });
+
+            // Wait for fade-in, then load level
+            await new Promise(r => setTimeout(r, 800));
 
             // Load the next level
             await levelLoader.loadLevel(levelId);
@@ -995,6 +1027,13 @@ function wireEvents() {
             // Reset minimap for new level
             if (minimap) minimap.reset();
 
+            // Fade out transition screen
+            if (transition.parentNode) {
+                transition.style.transition = 'opacity 0.5s ease-out';
+                transition.style.opacity = '0';
+                setTimeout(() => transition.remove(), 600);
+            }
+
             showScreen('game');
             if (mobileControls) {
                 mobileControls.enable();
@@ -1022,7 +1061,6 @@ function wireEvents() {
 
     // Boss encounter — switch to episode-specific combat music
     eventBus.on('boss:encounter', (data) => {
-        console.log(`[main.js] Boss encounter: ${data.name}`);
         const combatTrack = `e${gameState.currentEpisode}_combat`;
         audioManager.crossfadeTo(combatTrack, 1.0);
     });
@@ -1038,7 +1076,6 @@ function wireEvents() {
 
     // Boss death — open exit, play victory music, refresh weapon targets
     eventBus.on('boss:death', (data) => {
-        console.log(`[main.js] Boss defeated: ${data.name} (+${data.score} pts)`);
         audioManager.crossfadeTo('victory', 1.0);
 
         // Unlock the exit behind the boss (open the exit if it was locked)
@@ -1053,7 +1090,6 @@ function wireEvents() {
 
     // Boss summon — Schabbs summons a mutant near the player
     eventBus.on('boss:summon', (data) => {
-        console.log(`[main.js] Boss summons ${data.type} at (${data.x.toFixed(1)}, ${data.z.toFixed(1)})`);
         if (enemyManager) {
             const summonedEnemy = enemyManager.spawnEnemy({
                 type: data.type,
@@ -1072,14 +1108,8 @@ function wireEvents() {
     });
 
     // Boss gas cloud — Otto Giftmacher deploys toxic gas (3D visual + screen overlay)
-    /** @type {HTMLDivElement|null} */
-    let gasOverlay = null;
-    /** @type {THREE.Mesh[]} Active 3D gas cloud meshes in the scene */
-    const gasCloudMeshes = [];
 
     eventBus.on('boss:gas_cloud', (data) => {
-        console.log(`[main.js] Gas cloud deployed at (${data.x.toFixed(1)}, ${data.z.toFixed(1)})`);
-
         // 3D gas cloud: translucent green cylinder in the scene
         const gasGeo = new THREE.CylinderGeometry(data.radius, data.radius, 1.8, 16);
         const gasMat = new THREE.MeshBasicMaterial({
@@ -1154,7 +1184,6 @@ function wireEvents() {
 
     // Boss door lock — emitted when player enters boss trigger zone
     eventBus.on('boss:door_lock', () => {
-        console.log('[main.js] Boss room door locked!');
         // The boss door lock is handled visually — the collision grid already
         // has walls around the boss room; the door cell is set to wall to trap the player
         if (levelLoader.levelData && levelLoader.levelData.isBossLevel) {
@@ -1167,8 +1196,6 @@ function wireEvents() {
 
     // Boss phase transition — mech destroyed, spawn human Hitler (phase 2)
     eventBus.on('boss:phase_transition', (data) => {
-        console.log(`[main.js] Boss phase transition → ${data.nextPhase}`);
-
         // Clean up phase 1 boss (mesh, health bar, event listeners)
         if (boss) {
             boss.dispose();
@@ -1279,6 +1306,7 @@ async function startGame(episode = 1) {
     }
     gasCloudMeshes.length = 0;
     if (gasOverlay) gasOverlay.style.opacity = '0';
+    if (damageIndicator) damageIndicator.reset();
     stopGameLoop();
 
     gameState.newGame();
@@ -1705,8 +1733,32 @@ function gameOver() {
     if (mobileControls) mobileControls.disable();
     stopGameLoop();
     stopAmbientAudio();
+    audioManager.crossfadeTo('gameover', 1.0);
     if (crosshair) crosshair.classList.add('hidden');
-    showScreen('menu');
+    weaponHUD.setVisible(false);
+
+    // Wait for explicit keypress before returning to menu
+    const gameOverHandler = (e) => {
+        if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
+        document.removeEventListener('keydown', gameOverHandler);
+        // Clean up game over screen
+        if (damageIndicator) damageIndicator.reset();
+        audioManager.stopMusic();
+        quitToMenu();
+    };
+    // Also handle click/tap for mobile
+    const gameOverClick = () => {
+        document.removeEventListener('click', gameOverClick);
+        document.removeEventListener('keydown', gameOverHandler);
+        if (damageIndicator) damageIndicator.reset();
+        audioManager.stopMusic();
+        quitToMenu();
+    };
+    // Delay the listener to prevent accidental dismissal
+    setTimeout(() => {
+        document.addEventListener('keydown', gameOverHandler);
+        document.addEventListener('click', gameOverClick);
+    }, 2000);
 }
 
 /**

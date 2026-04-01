@@ -31,7 +31,6 @@ export class SaveSystem {
 
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            console.log(`[SaveSystem] Game saved — E${data.episode}M${data.floor}, score ${data.score}`);
         } catch (err) {
             console.error('[SaveSystem] Failed to save:', err);
         }
@@ -82,7 +81,6 @@ export class SaveSystem {
     deleteSave() {
         try {
             localStorage.removeItem(STORAGE_KEY);
-            console.log('[SaveSystem] Save deleted.');
         } catch (err) {
             console.error('[SaveSystem] Failed to delete save:', err);
         }

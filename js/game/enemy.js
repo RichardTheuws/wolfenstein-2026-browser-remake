@@ -144,8 +144,8 @@ const ALERT_TIME_MAX = 0.5;
 /** Pain flinch duration (seconds) */
 const PAIN_DURATION = 0.3;
 
-/** Death animation duration (seconds) */
-const DEATH_ANIM_DURATION = 0.5;
+/** Death animation duration (seconds) — long enough for visible collapse */
+const DEATH_ANIM_DURATION = 1.5;
 
 /** Minimum attack range — enemies try to close to this distance */
 const MIN_ATTACK_RANGE = 1.5;
@@ -201,9 +201,6 @@ export class Enemy {
         try {
             const result = await Enemy._modelLoader.loadModel(url);
             Enemy._models.set(type, result);
-            if (result.animations.length > 0) {
-                console.log(`Enemy model "${type}": ${result.animations.length} embedded animations (${result.animations.map(a => a.name).join(', ')})`);
-            }
         } catch (err) {
             console.warn(`Enemy.preloadModel: Failed to load model for "${type}" from ${url}:`, err);
         }
@@ -398,16 +395,17 @@ export class Enemy {
 
         this.hp -= damage;
 
-        // Brief subtle flash on hit
-        this._flashTimer = 0.05;
+        // Bright flash on hit — clearly visible damage feedback
+        this._flashTimer = 0.15;
         if (this._usesModel) {
             this.mesh.traverse((child) => {
                 if (child.isMesh && child.material) {
-                    child.material.emissive?.setHex(0x111111);
+                    child.material.emissive?.setHex(0xcc2200);
                 }
             });
         } else if (this.mesh.material) {
-            this.mesh.material.emissive.setHex(0x111111);
+            this.mesh.material.color.setHex(0xffffff);
+            this.mesh.material.emissive.setHex(0xcc2200);
         }
 
         if (this.hp <= 0) {
@@ -603,7 +601,6 @@ export class Enemy {
                 this._animator = null;
             }
 
-            console.log(`Enemy "${this.type}" using embedded skeletal animations: ${[...clipMap.keys()].join(', ')}`);
         } else {
             // No embedded animations — use procedural animator and check for Mixamo
             if (this._animator) {
@@ -1010,7 +1007,7 @@ export class Enemy {
      * @param {number} dt
      */
     _updateDeathAnimation(dt) {
-        // Skeletal death animation is handled by the mixer — don't override with procedural
+        // Skeletal death animation is handled by the mixer — don't override
         if (this._useMixamo) return;
 
         if (this._deathProgress >= 1) return;
@@ -1018,12 +1015,9 @@ export class Enemy {
         this._deathProgress += dt / DEATH_ANIM_DURATION;
         if (this._deathProgress > 1) this._deathProgress = 1;
 
-        // Fall to side: rotate X from 0 to 90 degrees
-        this.mesh.rotation.x = (Math.PI / 2) * this._deathProgress;
-
-        // Lower the mesh as it falls
-        const fallHeight = (this._height / 2) * (1 - this._deathProgress) + (this._depth / 2) * this._deathProgress;
-        this.mesh.position.y = fallHeight;
+        // The procedural animator (_animator) handles the visible death collapse.
+        // We only track progress here and keep the mesh at its base position.
+        // No manual rotation.x override — the animator does all the visual work.
     }
 
     // ── Internal: Line of Sight ────────────────────────────────────────

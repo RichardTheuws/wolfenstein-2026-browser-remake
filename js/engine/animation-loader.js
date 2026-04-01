@@ -158,16 +158,7 @@ export class AnimationLoader {
             const clips = this._clips.get(type);
             if (clips && clips.size > 0) {
                 loadedCount++;
-                console.log(
-                    `AnimationLoader: ${type} — ${clips.size} clip(s) loaded: [${[...clips.keys()].join(', ')}]`
-                );
             }
-        }
-
-        if (loadedCount === 0) {
-            console.log('AnimationLoader: No Mixamo animations found, procedural animations will be used');
-        } else {
-            console.log(`AnimationLoader: ${loadedCount}/${types.length} enemy types have Mixamo animations`);
         }
     }
 
