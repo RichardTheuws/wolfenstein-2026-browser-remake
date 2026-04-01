@@ -35,6 +35,7 @@ import { Minimap } from './ui/minimap.js';
 import { MobileControls } from './ui/mobile-controls.js';
 import { CheatSystem } from './game/cheats.js';
 import { EPISODE_INTROS } from './data/episode-intros.js';
+import { Leaderboard } from './ui/leaderboard.js';
 
 // ── Constants ───────────────────────────────────────────────────────
 const MAX_DELTA = 1 / 30; // Cap delta time at ~33ms (30 FPS minimum)
@@ -110,6 +111,9 @@ let cinematics = null;
 
 /** @type {Credits} */
 let credits = null;
+
+/** @type {Leaderboard} */
+let leaderboard = null;
 
 /** @type {Settings} */
 let settings = null;
@@ -358,6 +362,13 @@ async function boot() {
 
     // Cinematics system
     cinematics = new Cinematics();
+
+    // Leaderboard
+    leaderboard = new Leaderboard();
+    const btnLeaderboard = document.getElementById('btn-leaderboard');
+    if (btnLeaderboard) {
+        btnLeaderboard.addEventListener('click', () => leaderboard.show());
+    }
 
     // UI overlays
     weaponHUD = new WeaponViewmodel(renderer);
@@ -1527,6 +1538,19 @@ function showEpisodeComplete(episode) {
     weaponHUD.setVisible(false);
     if (crosshair) crosshair.classList.add('hidden');
 
+    // Submit score to leaderboard
+    if (leaderboard && gameState.score > 0) {
+        leaderboard.submitScore(null, {
+            score: gameState.score,
+            episode,
+            floor: gameState.currentFloor,
+            kills: gameState.kills,
+            secrets: gameState.secretsFound,
+            time: Math.round(performance.now() / 1000),
+            difficulty: gameState.difficulty,
+        });
+    }
+
     // Play victory music
     audioManager.crossfadeTo('victory', 1.0);
 
@@ -1735,6 +1759,19 @@ function gameOver() {
     stopAmbientAudio();
     audioManager.crossfadeTo('gameover', 1.0);
     if (crosshair) crosshair.classList.add('hidden');
+
+    // Submit score to leaderboard
+    if (leaderboard && gameState.score > 0) {
+        leaderboard.submitScore(null, {
+            score: gameState.score,
+            episode: gameState.currentEpisode,
+            floor: gameState.currentFloor,
+            kills: gameState.kills,
+            secrets: gameState.secretsFound,
+            time: Math.round(performance.now() / 1000),
+            difficulty: gameState.difficulty,
+        });
+    }
     weaponHUD.setVisible(false);
 
     // Wait for explicit keypress before returning to menu
