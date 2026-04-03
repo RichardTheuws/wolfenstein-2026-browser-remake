@@ -290,6 +290,24 @@ export class DamageIndicator {
     }
 
     /**
+     * Reset visual state without destroying the component.
+     * Clears game over screen, damage overlay, and death state.
+     */
+    reset() {
+        this._deathActive = false;
+        this._damageOpacity = 0;
+        this._damageOverlay.style.background = 'transparent';
+        this._damageOverlay.style.opacity = '0';
+        this._damageOverlay.classList.remove('low-health-pulse', 'damage-fade');
+        this._pickupFlash.classList.remove('pickup-fade');
+
+        const gameOverScreen = document.getElementById('game-over-screen');
+        if (gameOverScreen) gameOverScreen.remove();
+        const gameOverText = document.getElementById('game-over-text');
+        if (gameOverText) gameOverText.remove();
+    }
+
+    /**
      * Clean up DOM elements and event listeners.
      */
     dispose() {

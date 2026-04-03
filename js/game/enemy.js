@@ -290,6 +290,9 @@ export class Enemy {
         /** Whether this enemy uses Mixamo skeletal animations (vs procedural) */
         this._useMixamo = false;
 
+        /** Track last animation state to avoid restarting one-shot anims */
+        this._lastAnimState = null;
+
         /** Original material color for flash-back (only for box fallback) */
         this._originalColor = new THREE.Color(typeData.color);
 
@@ -319,22 +322,11 @@ export class Enemy {
      * @param {import('../engine/collision.js').CollisionSystem} collision
      */
     update(dt, playerPos, collision) {
-        if (!this.isAlive) {
-            this._updateDeathAnimation(dt);
-            if (this._useMixamo) {
-                this._mixerAnimator.update(dt);
-            } else if (this._animator) {
-                this._animator.update(dt);
-            }
-            return;
-        }
-
-        // Update flash effect
+        // Flash timer runs for BOTH alive and dead enemies (clear hit glow on corpses)
         if (this._flashTimer > 0) {
             this._flashTimer -= dt;
             if (this._flashTimer <= 0) {
                 if (this._usesModel) {
-                    // Reset all materials in the model
                     this.mesh.traverse((child) => {
                         if (child.isMesh && child.material) {
                             child.material.emissive?.setHex(0x000000);
@@ -345,6 +337,20 @@ export class Enemy {
                     this.mesh.material.emissive.setHex(0x000000);
                 }
             }
+        }
+
+        if (!this.isAlive) {
+            this._updateDeathAnimation(dt);
+            if (this._useMixamo) {
+                if (this.state !== this._lastAnimState) {
+                    this._mixerAnimator.play('dead');
+                    this._lastAnimState = this.state;
+                }
+                this._mixerAnimator.update(dt);
+            } else if (this._animator) {
+                this._animator.update(dt);
+            }
+            return;
         }
 
         // State machine
@@ -375,12 +381,16 @@ export class Enemy {
         // Sync mesh position
         this.mesh.position.set(this.position.x, this._height / 2, this.position.z);
 
-        // Sync animation state and update animation system
+        // Update animation system (skeletal or procedural)
         if (this._useMixamo) {
-            this._mixerAnimator.play(this.state);
+            // Only call play() on state CHANGE — not every frame
+            // (one-shot anims like hit/death restart if called repeatedly)
+            if (this.state !== this._lastAnimState) {
+                this._mixerAnimator.play(this.state);
+                this._lastAnimState = this.state;
+            }
             this._mixerAnimator.update(dt);
         } else if (this._animator) {
-            // Procedural animations (applied as additive offsets after position/rotation sync)
             this._animator.update(dt);
         }
     }
@@ -395,17 +405,16 @@ export class Enemy {
 
         this.hp -= damage;
 
-        // Bright flash on hit — clearly visible damage feedback
-        this._flashTimer = 0.15;
+        // Flash on hit — visible but not overwhelming
+        this._flashTimer = 0.12;
         if (this._usesModel) {
             this.mesh.traverse((child) => {
                 if (child.isMesh && child.material) {
-                    child.material.emissive?.setHex(0xcc2200);
+                    child.material.emissive?.setHex(0x551100);
                 }
             });
         } else if (this.mesh.material) {
-            this.mesh.material.color.setHex(0xffffff);
-            this.mesh.material.emissive.setHex(0xcc2200);
+            this.mesh.material.emissive.setHex(0x551100);
         }
 
         if (this.hp <= 0) {
@@ -576,7 +585,9 @@ export class Enemy {
         this._scene.add(this.mesh);
 
         // Check if the GLB has embedded skeletal animations (Blender-rigged)
-        if (animations.length > 0) {
+        // Dogs use procedural animation (quadruped walk/attack) — humanoid skeleton doesn't fit
+        const isDog = this._typeData.type === 'dog' || this._isDog;
+        if (animations.length > 0 && !isDog) {
             // Build a Map of clip name → AnimationClip for the EnemyAnimationMixer
             const clipMap = new Map();
             for (const clip of animations) {
@@ -977,11 +988,13 @@ export class Enemy {
     _die() {
         this.isAlive = false;
         this.state = STATE.DEAD;
+        this._lastAnimState = null;  // Force animation state change on next update
         this._deathProgress = 0;
 
         // Trigger death animation (Mixamo or procedural)
         if (this._useMixamo) {
             this._mixerAnimator.play('dead');
+            this._lastAnimState = STATE.DEAD;
         } else if (this._animator) {
             this._animator.setState('death');
         }

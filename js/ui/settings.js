@@ -13,10 +13,12 @@ const DEFAULTS = {
     brightness: 1.0,
     crosshair: 'dot',
     crtFilter: false,
+    soundOff: false,
     masterVolume: 0.8,
     musicVolume: 0.4,
     sfxVolume: 0.9,
     sensitivity: 0.002,
+    playerName: '',
 };
 
 export class Settings {
@@ -116,7 +118,11 @@ export class Settings {
 
         // Audio
         if (this._audioManager) {
-            this._audioManager.setMasterVolume(s.masterVolume);
+            if (s.soundOff) {
+                this._audioManager.setMasterVolume(0);
+            } else {
+                this._audioManager.setMasterVolume(s.masterVolume);
+            }
             this._audioManager.setMusicVolume(s.musicVolume);
             this._audioManager.setSFXVolume(s.sfxVolume);
         }
@@ -188,6 +194,13 @@ export class Settings {
                 <div class="settings-group">
                     <h3 class="settings-group-title">Audio</h3>
                     <div class="setting-row">
+                        <label class="setting-label" for="setting-sound-off">Sound</label>
+                        <label class="setting-toggle">
+                            <input type="checkbox" id="setting-sound-off">
+                            <span class="setting-toggle-label" data-for="setting-sound-off">On</span>
+                        </label>
+                    </div>
+                    <div class="setting-row">
                         <label class="setting-label" for="setting-master">Master Volume</label>
                         <input type="range" class="setting-range" id="setting-master"
                                min="0" max="1" step="0.05" value="0.8">
@@ -214,6 +227,15 @@ export class Settings {
                         <input type="range" class="setting-range" id="setting-sensitivity"
                                min="0.0005" max="0.005" step="0.0005" value="0.002">
                         <span class="setting-value" data-for="setting-sensitivity">Medium</span>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="settings-group-title">Player</h3>
+                    <div class="setting-row">
+                        <label class="setting-label" for="setting-playername">Name (High Scores)</label>
+                        <input type="text" class="setting-select" id="setting-playername"
+                               maxlength="20" placeholder="BJ" style="text-transform: uppercase; letter-spacing: 1px; width: 140px; text-align: center;">
                     </div>
                 </div>
 
@@ -300,6 +322,31 @@ export class Settings {
                 this._updateValueDisplay('setting-sensitivity', this._sensitivityLabel(this._settings.sensitivity));
                 this.applySettings();
             });
+        }
+
+        // Sound Off toggle
+        const soundOff = el.querySelector('#setting-sound-off');
+        if (soundOff) {
+            soundOff.addEventListener('change', () => {
+                this._settings.soundOff = soundOff.checked;
+                const label = el.querySelector('.setting-toggle-label[data-for="setting-sound-off"]');
+                if (label) label.textContent = soundOff.checked ? 'Off' : 'On';
+                this.applySettings();
+            });
+        }
+
+        // Player name
+        const playerName = el.querySelector('#setting-playername');
+        if (playerName) {
+            playerName.addEventListener('input', () => {
+                this._settings.playerName = playerName.value.trim().substring(0, 20);
+                // Sync to leaderboard localStorage key
+                if (this._settings.playerName) {
+                    localStorage.setItem('wolf3d-player-name', this._settings.playerName);
+                }
+                this._saveSettings();
+            });
+            playerName.addEventListener('keydown', (e) => e.stopPropagation());
         }
 
         // Back button
@@ -408,6 +455,19 @@ export class Settings {
         if (sensitivity) {
             sensitivity.value = s.sensitivity;
             this._updateValueDisplay('setting-sensitivity', this._sensitivityLabel(s.sensitivity));
+        }
+
+        const soundOff = el.querySelector('#setting-sound-off');
+        if (soundOff) {
+            soundOff.checked = s.soundOff;
+            const label = el.querySelector('.setting-toggle-label[data-for="setting-sound-off"]');
+            if (label) label.textContent = s.soundOff ? 'Off' : 'On';
+        }
+
+        const playerName = el.querySelector('#setting-playername');
+        if (playerName) {
+            // Load from settings first, fall back to leaderboard localStorage
+            playerName.value = s.playerName || localStorage.getItem('wolf3d-player-name') || '';
         }
     }
 }

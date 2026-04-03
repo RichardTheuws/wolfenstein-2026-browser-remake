@@ -245,13 +245,21 @@ export class LevelExit {
         // Tally animation: count up stat percentages
         this._animateStats();
 
-        // Listen for keypress to advance
-        this._keypressHandler = (e) => {
-            // Ignore modifier keys alone
-            if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
-            this._advance();
-        };
-        document.addEventListener('keydown', this._keypressHandler);
+        // Exit pointer lock so the player can see the stats screen cursor-free
+        if (document.pointerLockElement) {
+            document.exitPointerLock();
+        }
+
+        // Listen for keypress OR click to advance (delayed to prevent accidental skip)
+        setTimeout(() => {
+            this._keypressHandler = (e) => {
+                if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
+                this._advance();
+            };
+            this._clickHandler = () => this._advance();
+            document.addEventListener('keydown', this._keypressHandler);
+            document.addEventListener('click', this._clickHandler);
+        }, 1000);
 
         // Auto-advance after delay
         this._advanceTimer = setTimeout(() => this._advance(), AUTO_ADVANCE_DELAY);
@@ -291,6 +299,10 @@ export class LevelExit {
      * Advance to the next floor. Cleans up the stats overlay and emits event.
      */
     _advance() {
+        // Prevent double-advance
+        if (this._advancing) return;
+        this._advancing = true;
+
         // Clean up
         if (this._advanceTimer) {
             clearTimeout(this._advanceTimer);
@@ -299,6 +311,10 @@ export class LevelExit {
         if (this._keypressHandler) {
             document.removeEventListener('keydown', this._keypressHandler);
             this._keypressHandler = null;
+        }
+        if (this._clickHandler) {
+            document.removeEventListener('click', this._clickHandler);
+            this._clickHandler = null;
         }
         if (this._overlay) {
             this._overlay.remove();
@@ -323,6 +339,7 @@ export class LevelExit {
      */
     reset() {
         this._triggered = false;
+        this._advancing = false;
         this._exitPosition = null;
         this._cleanup();
     }

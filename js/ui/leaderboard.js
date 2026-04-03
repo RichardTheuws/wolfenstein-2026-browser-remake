@@ -258,6 +258,10 @@ export class Leaderboard {
      * @param {number|null} [episode=null] - Episode to show initially, or null for ALL
      */
     async show(episode = null) {
+        // Release pointer lock for UI interaction
+        if (document.pointerLockElement) {
+            document.exitPointerLock();
+        }
         // Remove any existing overlay
         this.hide();
 
@@ -360,6 +364,11 @@ export class Leaderboard {
      */
     _promptForName() {
         return new Promise((resolve) => {
+            // Release pointer lock so the text input can receive keyboard events
+            if (document.pointerLockElement) {
+                document.exitPointerLock();
+            }
+
             const overlay = document.createElement('div');
             Object.assign(overlay.style, {
                 position: 'fixed',
@@ -411,6 +420,8 @@ export class Leaderboard {
             input.maxLength = 20;
             input.value = this._getStoredName() || 'BJ';
             input.placeholder = 'BJ';
+            // Stop keydown from reaching the game's input manager
+            input.addEventListener('keydown', (e) => e.stopPropagation());
             Object.assign(input.style, {
                 fontFamily: FONT_FAMILY,
                 fontSize: '16px',
