@@ -557,9 +557,11 @@ export class Enemy {
         box.getSize(modelSize);
 
         // Scale to match enemy dimensions
+        // Use height as primary scale; dogs and small models use max() to ensure visibility
         const scaleY = this._height / (modelSize.y || 1);
         const scaleX = this._width / (modelSize.x || 1);
-        const scale = Math.min(scaleX, scaleY); // Uniform scale to fit
+        const isDogModel = this._typeData.type === 'dog';
+        const scale = isDogModel ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY);
         clone.scale.set(scale, scale, scale);
 
         // Recompute bounding boxes/spheres after scaling so raycaster hits correctly

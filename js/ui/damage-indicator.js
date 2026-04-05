@@ -95,12 +95,13 @@ export class DamageIndicator {
 
         this._damageOverlay.style.background =
             `radial-gradient(ellipse at center, transparent 40%, rgba(139, 0, 0, ${this._damageOpacity}) 100%)`;
-        this._damageOverlay.style.opacity = '1';
 
-        // CSS transition handles the fade-out; we kick it off after a frame
-        this._damageOverlay.classList.remove('damage-fade');
+        // Flash on → fade out (use inline transitions to avoid CSS specificity conflict)
+        this._damageOverlay.style.transition = 'none';
+        this._damageOverlay.style.opacity = '1';
         void this._damageOverlay.offsetHeight;
-        this._damageOverlay.classList.add('damage-fade');
+        this._damageOverlay.style.transition = 'opacity 0.4s ease-out';
+        this._damageOverlay.style.opacity = '0';
     }
 
     /**
@@ -111,11 +112,13 @@ export class DamageIndicator {
         if (this._deathActive) return;
 
         this._pickupFlash.style.background = color;
-        this._pickupFlash.style.opacity = '1';
 
-        this._pickupFlash.classList.remove('pickup-fade');
+        // Flash on → fade out (inline transitions for reliable specificity)
+        this._pickupFlash.style.transition = 'none';
+        this._pickupFlash.style.opacity = '1';
         void this._pickupFlash.offsetHeight;
-        this._pickupFlash.classList.add('pickup-fade');
+        this._pickupFlash.style.transition = 'opacity 0.25s ease-out';
+        this._pickupFlash.style.opacity = '0';
     }
 
     /**
