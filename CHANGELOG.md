@@ -5,6 +5,24 @@ All notable changes to the Infernal Assault project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-06-18 — Game Feel (Wave 3)
+
+### Added
+
+- Movement acceleration/deceleration: velocity is now tracked in local space and
+  exponentially eased toward the input (quick to start, slightly slower to stop)
+  instead of snapping on/off. Turning instantly redirects momentum (no world drift),
+  and head-on wall contact bleeds momentum so you don't dart sideways on release.
+- Camera headbob: subtle vertical bob + lateral sway scaled to movement speed, with
+  eased amplitude so it fades in/out smoothly when starting and stopping.
+- Sprint FOV kick: the camera FOV widens slightly (75°→82°) while sprint-moving and
+  lerps back when you slow down.
+
+### Notes
+
+- Velocity, bob and FOV state reset on (re)spawn. Verified: boots clean with 0 console
+  errors and runs in-game without runtime errors; qualitative feel is for playtest.
+
 ## [0.5.0] - 2026-06-18 — Boss Skinning (Wave 2, part 3)
 
 ### Fixed
