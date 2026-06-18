@@ -116,6 +116,9 @@ export class LevelLoader {
         /** Loaded textures cache */
         this._textures = new Map();
 
+        /** Derived normal-map cache (keyed by albedo texture) */
+        this._normalCache = new Map();
+
         /** Texture loader */
         this._textureLoader = new THREE.TextureLoader();
 
@@ -482,6 +485,79 @@ export class LevelLoader {
         return texture;
     }
 
+    /**
+     * Derive a tangent-space normal map from an albedo texture's luminance
+     * (Sobel height field). Lets flat MeshStandard surfaces catch light along
+     * mortar lines / grooves without authoring separate PBR maps. Cached per albedo.
+     * @param {THREE.Texture} albedoTex
+     * @param {number} [strength=2.0] - Height-to-normal gain
+     * @returns {THREE.Texture|null}
+     */
+    _deriveNormalMap(albedoTex, strength = 2.0) {
+        if (this._normalCache.has(albedoTex)) return this._normalCache.get(albedoTex);
+
+        const img = albedoTex.image;
+        if (!img || !img.width || !img.height) return null;
+        const w = img.width;
+        const h = img.height;
+
+        const src = document.createElement('canvas');
+        src.width = w;
+        src.height = h;
+        const sctx = src.getContext('2d', { willReadFrequently: true });
+        sctx.drawImage(img, 0, 0, w, h);
+
+        let data;
+        try {
+            data = sctx.getImageData(0, 0, w, h).data;
+        } catch {
+            return null; // tainted canvas (cross-origin) — skip gracefully
+        }
+
+        // Luminance height field
+        const height = new Float32Array(w * h);
+        for (let i = 0; i < w * h; i++) {
+            height[i] = (0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2]) / 255;
+        }
+        const at = (x, y) => height[((y + h) % h) * w + ((x + w) % w)]; // wrap = tiles
+
+        const out = document.createElement('canvas');
+        out.width = w;
+        out.height = h;
+        const octx = out.getContext('2d');
+        const outImg = octx.createImageData(w, h);
+        const od = outImg.data;
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const dx = (at(x + 1, y - 1) + 2 * at(x + 1, y) + at(x + 1, y + 1))
+                         - (at(x - 1, y - 1) + 2 * at(x - 1, y) + at(x - 1, y + 1));
+                const dy = (at(x - 1, y + 1) + 2 * at(x, y + 1) + at(x + 1, y + 1))
+                         - (at(x - 1, y - 1) + 2 * at(x, y - 1) + at(x + 1, y - 1));
+                let nx = -dx * strength;
+                let ny = -dy * strength;
+                let nz = 1.0;
+                const len = Math.hypot(nx, ny, nz) || 1;
+                const idx = (y * w + x) * 4;
+                od[idx]     = ((nx / len) * 0.5 + 0.5) * 255;
+                od[idx + 1] = ((ny / len) * 0.5 + 0.5) * 255;
+                od[idx + 2] = ((nz / len) * 0.5 + 0.5) * 255;
+                od[idx + 3] = 255;
+            }
+        }
+        octx.putImageData(outImg, 0, 0);
+
+        const tex = new THREE.CanvasTexture(out);
+        tex.wrapS = albedoTex.wrapS;
+        tex.wrapT = albedoTex.wrapT;
+        tex.repeat.copy(albedoTex.repeat);
+        tex.anisotropy = this._maxAnisotropy;
+        tex.colorSpace = THREE.NoColorSpace; // normal data is linear, not sRGB
+        tex.needsUpdate = true;
+        this._normalCache.set(albedoTex, tex);
+        return tex;
+    }
+
     // ── Internal: Grid Parsing ──────────────────────────────────────
 
     /**
@@ -568,10 +644,12 @@ export class LevelLoader {
             const texture = this._textures.get(wallType) || this._textures.get(1);
             const material = new THREE.MeshStandardMaterial({
                 map: texture,
+                normalMap: this._deriveNormalMap(texture),
                 side: THREE.FrontSide,
                 roughness: 0.9,
                 metalness: 0.05,
             });
+            if (material.normalMap) material.normalScale.set(0.7, 0.7);
 
             const instancedMesh = new THREE.InstancedMesh(faceGeometry, material, faces.length);
             instancedMesh.castShadow = false;
@@ -616,11 +694,13 @@ export class LevelLoader {
         }
         const floorMaterial = new THREE.MeshStandardMaterial({
             map: floorTex || undefined,
+            normalMap: floorTex ? this._deriveNormalMap(floorTex) : undefined,
             color: floorTex ? 0xffffff : 0x404040,
             side: THREE.FrontSide,
             roughness: 0.95,
             metalness: 0.0,
         });
+        if (floorMaterial.normalMap) floorMaterial.normalScale.set(0.6, 0.6);
         const floor = new THREE.Mesh(planeGeo, floorMaterial);
         floor.rotation.x = -Math.PI / 2;
         floor.position.set(this.width / 2, 0, this.height / 2);
@@ -637,11 +717,13 @@ export class LevelLoader {
             : 0x303030;
         const ceilMaterial = new THREE.MeshStandardMaterial({
             map: ceilTex || undefined,
+            normalMap: ceilTex ? this._deriveNormalMap(ceilTex) : undefined,
             color: ceilTex ? 0xffffff : ceilingColor,
             side: THREE.FrontSide,
             roughness: 0.95,
             metalness: 0.0,
         });
+        if (ceilMaterial.normalMap) ceilMaterial.normalScale.set(0.5, 0.5);
         const ceiling = new THREE.Mesh(planeGeo.clone(), ceilMaterial);
         ceiling.rotation.x = Math.PI / 2;
         ceiling.position.set(this.width / 2, WALL_HEIGHT, this.height / 2);

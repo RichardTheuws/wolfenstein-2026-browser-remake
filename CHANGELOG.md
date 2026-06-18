@@ -5,6 +5,16 @@ All notable changes to the Infernal Assault project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-06-18 — PBR Surface Detail (Wave 2, part 1)
+
+### Added
+
+- Runtime-derived tangent-space normal maps for all world surfaces (walls, floor,
+  ceiling), computed from each albedo texture's luminance via a tiling Sobel height
+  field. Flat MeshStandard surfaces now catch the key light along mortar lines and
+  grooves — real surface relief without authoring or shipping extra PBR map files.
+  Derived once per texture and cached; tiles seamlessly with the albedo.
+
 ## [0.2.0] - 2026-06-18 — Visual Quality Pass (Wave 1)
 
 Surgical rendering upgrade on the existing Three.js engine (no rebuild — see ADR
