@@ -5,6 +5,28 @@ All notable changes to the Infernal Assault project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-06-18 — Visual Quality Pass (Wave 1)
+
+Surgical rendering upgrade on the existing Three.js engine (no rebuild — see ADR
+2026-06-18 "Wolfenstein: chirurgisch verbeteren i.p.v. Unreal-rebuild").
+
+### Changed
+
+- ACES filmic tone mapping + exposure, applied via an OutputPass in the composer
+- Lighting overhauled: ambient + hemisphere + directional key light replaces the
+  flat ambient-only setup, giving walls form and specular response
+- World materials switched from MeshLambert to MeshStandard (PBR) for walls, floor,
+  ceiling and doors; metallic door types (gold/silver/elevator) now catch the light
+- Anisotropic texture filtering on all level textures (sharper grazing-angle floors/walls)
+- UnrealBloom post-processing pass (lamps, flames, muzzle flash and highlights glow)
+- SMAA edge anti-aliasing (high quality tier only)
+- Quality tier selection: heavier passes auto-disabled on touch / small-screen devices
+
+### Notes
+
+- GTAO/SSAO ambient occlusion deferred to a later wave pending real-device validation
+  (crashes software-GL test renderers; least visible benefit of the pass set)
+
 ## [Unreleased]
 
 ### Added

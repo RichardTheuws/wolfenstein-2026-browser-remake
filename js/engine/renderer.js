@@ -9,6 +9,9 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { CRTShader } from './crt-shader.js';
 
 export class Renderer {
@@ -29,6 +32,12 @@ export class Renderer {
         this._renderer.setSize(window.innerWidth, window.innerHeight);
         this._renderer.shadowMap.enabled = false; // No shadows (authentic + perf)
         this._renderer.outputColorSpace = THREE.SRGBColorSpace;
+        // Filmic tone mapping for modern highlight roll-off (applied via OutputPass).
+        this._renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this._renderer.toneMappingExposure = 1.55;
+
+        // Max anisotropy supported by the GPU — used to sharpen grazing-angle textures.
+        this.maxAnisotropy = this._renderer.capabilities.getMaxAnisotropy();
 
         // ── Scene ───────────────────────────────────────────────────
         this.scene = new THREE.Scene();
@@ -40,24 +49,53 @@ export class Renderer {
         this.camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 100);
         this.camera.position.set(0, 1.6, 0); // Eye height
 
-        // ── Ambient Light ───────────────────────────────────────────
-        this._ambientLight = new THREE.AmbientLight(0x606060, 1.2);
+        // ── Ambient + Hemisphere + Key Light ────────────────────────
+        // Low ambient base, hemisphere for sky/ground tint, and a directional
+        // key light so walls gain form/specular instead of reading flat.
+        this._ambientLight = new THREE.AmbientLight(0x3a3a44, 0.75);
         this.scene.add(this._ambientLight);
+
+        this._hemiLight = new THREE.HemisphereLight(0xaac2ee, 0x35281c, 1.0);
+        this.scene.add(this._hemiLight);
+
+        this._keyLight = new THREE.DirectionalLight(0xfff0e0, 1.8);
+        this._keyLight.position.set(0.5, 1.0, 0.3);
+        this.scene.add(this._keyLight);
 
         // ── Point Lights Container ──────────────────────────────────
         /** @type {Map<string, THREE.PointLight>} */
         this._pointLights = new Map();
 
         // ── Post-Processing (EffectComposer) ────────────────────────
+        // Pass order: scene → AO → bloom → SMAA → tone-map/output → CRT.
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
         this._composer = new EffectComposer(this._renderer);
         this._renderPass = new RenderPass(this.scene, this.camera);
         this._composer.addPass(this._renderPass);
 
-        // CRT post-processing pass (disabled by default)
-        this._crtPass = new ShaderPass(CRTShader);
-        this._crtPass.uniforms.resolution.value = new THREE.Vector2(
-            window.innerWidth, window.innerHeight
+        // Selective bloom — only bright sources (lamps, muzzle flash, gold) glow.
+        this._bloomPass = new UnrealBloomPass(
+            new THREE.Vector2(width, height),
+            0.6,  // strength
+            0.6,  // radius
+            0.6   // threshold — lamps/flames/highlights glow, dim walls don't
         );
+        this._composer.addPass(this._bloomPass);
+
+        // SMAA — soft edge AA that preserves the crunchy pixel look better than MSAA.
+        this._smaaPass = new SMAAPass(width, height);
+        this._composer.addPass(this._smaaPass);
+
+        // OutputPass applies tone mapping + sRGB conversion to the composed result
+        // (EffectComposer render targets are linear, so this is required).
+        this._outputPass = new OutputPass();
+        this._composer.addPass(this._outputPass);
+
+        // CRT post-processing pass (disabled by default, runs last when enabled)
+        this._crtPass = new ShaderPass(CRTShader);
+        this._crtPass.uniforms.resolution.value = new THREE.Vector2(width, height);
         this._crtPass.enabled = false;
         this._composer.addPass(this._crtPass);
 
@@ -150,6 +188,17 @@ export class Renderer {
      */
     isCRTEnabled() {
         return this._crtPass.enabled;
+    }
+
+    /**
+     * Set the rendering quality tier. SMAA edge-AA is disabled on 'low'
+     * (mobile / weak GPUs); bloom + tone mapping stay on for all tiers.
+     * @param {'low'|'high'} tier
+     */
+    setQuality(tier) {
+        const high = tier !== 'low';
+        this._bloomPass.enabled = true;
+        this._smaaPass.enabled = high;
     }
 
     /**

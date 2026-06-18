@@ -94,10 +94,14 @@ const FACE_DIRECTIONS = [
 export class LevelLoader {
     /**
      * @param {THREE.Scene} scene - The scene to add geometry to
+     * @param {number} [maxAnisotropy=1] - GPU max anisotropy for texture filtering
      */
-    constructor(scene) {
+    constructor(scene, maxAnisotropy = 1) {
         /** @type {THREE.Scene} */
         this.scene = scene;
+
+        /** @type {number} Anisotropic filtering level applied to all textures */
+        this._maxAnisotropy = maxAnisotropy;
 
         /** @type {number[][]} The wall grid [z][x] */
         this.grid = [];
@@ -428,7 +432,15 @@ export class LevelLoader {
      */
     _loadTexture(path) {
         return new Promise((resolve, reject) => {
-            this._textureLoader.load(path, resolve, undefined, reject);
+            this._textureLoader.load(
+                path,
+                (tex) => {
+                    tex.anisotropy = this._maxAnisotropy;
+                    resolve(tex);
+                },
+                undefined,
+                reject
+            );
         });
     }
 
@@ -554,9 +566,11 @@ export class LevelLoader {
 
         for (const [wallType, faces] of facesByTexture) {
             const texture = this._textures.get(wallType) || this._textures.get(1);
-            const material = new THREE.MeshLambertMaterial({
+            const material = new THREE.MeshStandardMaterial({
                 map: texture,
                 side: THREE.FrontSide,
+                roughness: 0.9,
+                metalness: 0.05,
             });
 
             const instancedMesh = new THREE.InstancedMesh(faceGeometry, material, faces.length);
@@ -600,10 +614,12 @@ export class LevelLoader {
         if (floorTex) {
             floorTex.repeat.set(this.width, this.height);
         }
-        const floorMaterial = new THREE.MeshLambertMaterial({
+        const floorMaterial = new THREE.MeshStandardMaterial({
             map: floorTex || undefined,
             color: floorTex ? 0xffffff : 0x404040,
             side: THREE.FrontSide,
+            roughness: 0.95,
+            metalness: 0.0,
         });
         const floor = new THREE.Mesh(planeGeo, floorMaterial);
         floor.rotation.x = -Math.PI / 2;
@@ -619,10 +635,12 @@ export class LevelLoader {
         const ceilingColor = meta?.ceilingColor
             ? new THREE.Color(meta.ceilingColor)
             : 0x303030;
-        const ceilMaterial = new THREE.MeshLambertMaterial({
+        const ceilMaterial = new THREE.MeshStandardMaterial({
             map: ceilTex || undefined,
             color: ceilTex ? 0xffffff : ceilingColor,
             side: THREE.FrontSide,
+            roughness: 0.95,
+            metalness: 0.0,
         });
         const ceiling = new THREE.Mesh(planeGeo.clone(), ceilMaterial);
         ceiling.rotation.x = Math.PI / 2;
@@ -660,10 +678,15 @@ export class LevelLoader {
             const doorTexture = this._textures.get(`door_${doorType}`);
             const fallbackColor = doorFallbackColors[doorType] || 0x663300;
 
-            const material = new THREE.MeshLambertMaterial({
+            // Metallic door types (gold/silver/elevator) catch the key light;
+            // wooden doors stay matte.
+            const isMetalDoor = doorType === 'gold' || doorType === 'silver' || doorType === 'elevator';
+            const material = new THREE.MeshStandardMaterial({
                 map: doorTexture || undefined,
                 color: doorTexture ? 0xffffff : fallbackColor,
                 side: THREE.DoubleSide,
+                roughness: isMetalDoor ? 0.4 : 0.75,
+                metalness: isMetalDoor ? 0.65 : 0.0,
             });
 
             const mesh = new THREE.Mesh(geometry, material);

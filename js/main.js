@@ -190,6 +190,12 @@ async function boot() {
     // 1. Create renderer
     renderer = new Renderer(canvas);
 
+    // Pick a quality tier: disable the heavy ambient-occlusion pass on touch /
+    // small-screen devices so mobile keeps a stable frame rate.
+    const isLowEnd = window.matchMedia('(pointer: coarse)').matches
+        || Math.min(window.innerWidth, window.innerHeight) < 600;
+    renderer.setQuality(isLowEnd ? 'low' : 'high');
+
     setLoadingProgress(20, 'Setting up input...');
 
     // 2. Create input manager
@@ -201,7 +207,7 @@ async function boot() {
     setLoadingProgress(30, 'Loading level...');
 
     // 4. Create level loader and load the first level
-    levelLoader = new LevelLoader(renderer.scene);
+    levelLoader = new LevelLoader(renderer.scene, renderer.maxAnisotropy);
 
     try {
         await levelLoader.loadLevel(DEFAULT_LEVEL);
