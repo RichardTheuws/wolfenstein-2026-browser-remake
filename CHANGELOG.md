@@ -5,6 +5,24 @@ All notable changes to the Infernal Assault project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-06-18 — Proper Enemy Skinning (Wave 2, part 2)
+
+### Fixed
+
+- Guard, SS soldier and mutant now use real skeletal skinning. Their shipped GLBs
+  had `skins=0` / `joints=0` — Blender's automatic bone-heat weighting silently
+  failed on the dense Meshy meshes ("failed to find solution"), exporting meshes
+  with no skin that animated as rigid blobs. Re-rigged from the raw source meshes
+  with the fixed pipeline (16-joint skin, 6 animation clips each incl. HitReaction).
+
+### Changed
+
+- `rig-and-animate.py` (asset pipeline, in `games/scripts/`): replaced the
+  failure-prone `ARMATURE_AUTO` (bone-heat) weighting with deterministic
+  proximity weighting (nearest-2 bones, inverse-distance) that never fails on
+  arbitrary meshes — guarantees a skinned export. Re-runnable on boss meshes once
+  their sources are regenerated via Meshy.
+
 ## [0.3.0] - 2026-06-18 — PBR Surface Detail (Wave 2, part 1)
 
 ### Added
