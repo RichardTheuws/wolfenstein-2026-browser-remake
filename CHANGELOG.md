@@ -5,6 +5,25 @@ All notable changes to the Infernal Assault project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-06-18 — Boss Skinning (Wave 2, part 3)
+
+### Fixed
+
+- Hans, Schabbs, Gretel and Übersoldier (4 bosses) now use real skeletal skinning
+  instead of animating as rigid blobs. Re-rigged in place from their existing GLBs —
+  no Meshy regeneration, so their exact appearance/textures are preserved — each now
+  has a 16-joint skin + 6 animation clips. Verified mesh integrity in an isolated
+  viewer (Hans walk-cycle, Übersoldier attack pose both render clean).
+- Left intentionally rigid: `hitler_mech` (mech stiffness is appropriate) and `dog`
+  (quadruped — needs a non-humanoid rig, tracked for a later pass). The remaining
+  boss meshes (hitler human phase, otto) were already correctly skinned.
+
+### Changed
+
+- `rig-and-animate.py` (asset pipeline): made idempotent — strips any pre-existing
+  armature/animation on import so an already-rigged GLB can be re-rigged cleanly,
+  preserving the mesh at its rest pose.
+
 ## [0.4.0] - 2026-06-18 — Proper Enemy Skinning (Wave 2, part 2)
 
 ### Fixed
