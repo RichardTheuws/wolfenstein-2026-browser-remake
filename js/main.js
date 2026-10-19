@@ -378,7 +378,7 @@ async function boot() {
 
     // UI overlays
     weaponHUD = new WeaponViewmodel(renderer);
-    damageIndicator = new DamageIndicator(gameState);
+    damageIndicator = new DamageIndicator(gameState, player);
 
     // Settings panel (creates its own DOM)
     settings = new Settings(renderer, audioManager, input);

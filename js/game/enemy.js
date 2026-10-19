@@ -981,6 +981,8 @@ export class Enemy {
             enemyId: this.id,
             damage: finalDamage,
             distance,
+            sourceX: this.position.x,
+            sourceZ: this.position.z,
         });
     }
 

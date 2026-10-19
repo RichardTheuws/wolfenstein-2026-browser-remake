@@ -1647,6 +1647,38 @@ html, body {
     transition: opacity 0.5s ease-out;
 }
 
+/* --- Directional hit markers: arcs around the crosshair toward the attacker --- */
+#damage-direction {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.damage-dir-marker {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    will-change: transform, opacity;
+}
+
+/* Arc segment sits above the pivot; the parent rotation swings it round the ring */
+.damage-dir-marker > div {
+    position: absolute;
+    left: calc(min(34vw, 34vh) * -0.5);
+    top: calc(min(34vw, 34vh) * -1);
+    width: min(34vw, 34vh);
+    height: calc(min(34vw, 34vh) * 0.22);
+    border-top: 6px solid rgba(220, 20, 20, 0.95);
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    filter: drop-shadow(0 0 6px rgba(255, 0, 0, 0.8));
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent);
+}
+
 /* --- Pickup flash: full-screen colored overlay --- */
 #pickup-flash {
     position: fixed;

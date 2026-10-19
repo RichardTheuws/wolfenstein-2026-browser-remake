@@ -1143,6 +1143,8 @@ export class Boss {
             damage: finalDamage,
             distance,
             isRocket: true,
+            sourceX: this.position.x,
+            sourceZ: this.position.z,
         });
 
         // Screen shake on every rocket fire (you FEEL these)
@@ -1340,6 +1342,8 @@ export class Boss {
             enemyId: this._bossId,
             damage: finalDamage,
             distance,
+            sourceX: this.position.x,
+            sourceZ: this.position.z,
         });
     }
 

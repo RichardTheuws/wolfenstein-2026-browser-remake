@@ -3,6 +3,7 @@
  *
  * Creates HTML overlay elements for:
  * - Red vignette on damage taken
+ * - Directional arcs pointing toward the attacker
  * - Colored flash on item pickup
  * - Persistent pulsing warning at low health
  * - Death screen (red → black + GAME OVER)
@@ -20,13 +21,21 @@ const PICKUP_COLORS = {
     treasure: 'rgba(255, 255, 255, 0.20)',  // white
 };
 
+/** Directional hit marker: lifetime (s), max simultaneous markers */
+const DIR_MARKER_LIFE = 1.2;
+const DIR_MARKER_MAX = 4;
+
 export class DamageIndicator {
     /**
      * @param {import('../game/game-state.js').GameState} [gameState] - Optional game state for death screen info
+     * @param {import('../game/player-controller.js').PlayerController} [player] - Player (position + rotation) for directional markers
      */
-    constructor(gameState) {
+    constructor(gameState, player) {
         /** @type {import('../game/game-state.js').GameState|null} */
         this._gameState = gameState || null;
+
+        /** @type {import('../game/player-controller.js').PlayerController|null} */
+        this._player = player || null;
 
         /** @type {string} Last enemy type that killed the player */
         this._lastKillerType = 'unknown';
@@ -39,6 +48,21 @@ export class DamageIndicator {
         this._pickupFlash = document.createElement('div');
         this._pickupFlash.id = 'pickup-flash';
         document.body.appendChild(this._pickupFlash);
+
+        // --- Directional hit markers (pool of arcs around the crosshair) ---
+        this._dirLayer = document.createElement('div');
+        this._dirLayer.id = 'damage-direction';
+        document.body.appendChild(this._dirLayer);
+
+        /** @type {Array<{el: HTMLElement, x: number, z: number, life: number}>} */
+        this._dirMarkers = [];
+        for (let i = 0; i < DIR_MARKER_MAX; i++) {
+            const el = document.createElement('div');
+            el.className = 'damage-dir-marker';
+            el.appendChild(document.createElement('div'));
+            this._dirLayer.appendChild(el);
+            this._dirMarkers.push({ el, x: 0, z: 0, life: 0 });
+        }
 
         // --- Internal state ---
         /** @type {number} Current damage overlay opacity (0-1) */
@@ -63,6 +87,7 @@ export class DamageIndicator {
         this._onDamage = (data) => {
             const amount = (typeof data === 'number') ? data : (data?.amount ?? 10);
             this.showDamage(amount);
+            if (data?.source) this.showDirection(data.source.x, data.source.z, amount);
         };
 
         this._onPickup = (data) => {
@@ -102,6 +127,52 @@ export class DamageIndicator {
         void this._damageOverlay.offsetHeight;
         this._damageOverlay.style.transition = 'opacity 0.4s ease-out';
         this._damageOverlay.style.opacity = '0';
+    }
+
+    /**
+     * Show an arc on the screen edge pointing toward the attacker.
+     * The arc tracks the attacker's position as the player turns.
+     * @param {number} x - Attacker world X
+     * @param {number} z - Attacker world Z
+     * @param {number} amount - Damage points (scales arc intensity)
+     */
+    showDirection(x, z, amount) {
+        if (this._deathActive || !this._player) return;
+
+        // Reuse a marker already near this source, else the oldest one
+        let marker = this._dirMarkers.find(m => m.life > 0 && Math.hypot(m.x - x, m.z - z) < 1.5);
+        if (!marker) {
+            marker = this._dirMarkers.reduce((a, b) => (a.life <= b.life ? a : b));
+        }
+        marker.x = x;
+        marker.z = z;
+        marker.life = DIR_MARKER_LIFE;
+        marker.strength = Math.min(0.5 + amount * 0.04, 1);
+        this._updateDirMarker(marker);
+    }
+
+    /**
+     * Position + fade one directional marker relative to the player's facing.
+     * @param {{el: HTMLElement, x: number, z: number, life: number, strength?: number}} marker
+     * @private
+     */
+    _updateDirMarker(marker) {
+        if (marker.life <= 0) {
+            marker.el.style.opacity = '0';
+            return;
+        }
+        const p = this._player.position;
+        const r = this._player.rotation;
+        const dx = marker.x - p.x;
+        const dz = marker.z - p.z;
+        // Project onto player forward (sin r, -cos r) and right (cos r, sin r)
+        const fwd = dx * Math.sin(r) - dz * Math.cos(r);
+        const side = dx * Math.cos(r) + dz * Math.sin(r);
+        // 0 = straight ahead (top of screen), clockwise positive
+        const angle = Math.atan2(side, fwd);
+
+        marker.el.style.transform = `rotate(${angle}rad)`;
+        marker.el.style.opacity = String(Math.min(1, marker.life / 0.4) * (marker.strength ?? 1));
     }
 
     /**
@@ -290,6 +361,12 @@ export class DamageIndicator {
         if (this._damageOpacity > 0 && !this._deathActive) {
             this._damageOpacity = Math.max(0, this._damageOpacity - deltaTime * 2);
         }
+
+        for (const marker of this._dirMarkers) {
+            if (marker.life <= 0) continue;
+            marker.life = this._deathActive ? 0 : Math.max(0, marker.life - deltaTime);
+            this._updateDirMarker(marker);
+        }
     }
 
     /**
@@ -303,6 +380,7 @@ export class DamageIndicator {
         this._damageOverlay.style.opacity = '0';
         this._damageOverlay.classList.remove('low-health-pulse', 'damage-fade');
         this._pickupFlash.classList.remove('pickup-fade');
+        this._clearDirMarkers();
 
         const gameOverScreen = document.getElementById('game-over-screen');
         if (gameOverScreen) gameOverScreen.remove();
@@ -335,8 +413,24 @@ export class DamageIndicator {
         if (this._pickupFlash.parentNode) {
             this._pickupFlash.parentNode.removeChild(this._pickupFlash);
         }
+        if (this._dirLayer.parentNode) {
+            this._dirLayer.parentNode.removeChild(this._dirLayer);
+        }
 
         this._damageOverlay = null;
         this._pickupFlash = null;
+        this._dirLayer = null;
+        this._dirMarkers = [];
+    }
+
+    /**
+     * Hide all directional markers immediately.
+     * @private
+     */
+    _clearDirMarkers() {
+        for (const marker of this._dirMarkers) {
+            marker.life = 0;
+            marker.el.style.opacity = '0';
+        }
     }
 }

@@ -321,10 +321,11 @@ export class EnemyManager {
 
     /**
      * Handle 'enemy:attack' event — apply damage to the player.
-     * @param {{enemyId: number, damage: number, distance: number}} data
+     * @param {{enemyId: number, damage: number, distance: number, sourceX?: number, sourceZ?: number}} data
      */
     _handleEnemyAttack(data) {
-        this._gameState.takeDamage(data.damage);
+        const source = data.sourceX !== undefined ? { x: data.sourceX, z: data.sourceZ } : null;
+        this._gameState.takeDamage(data.damage, source);
     }
 
     // ── Internal: Dead Enemy Cleanup ───────────────────────────────────

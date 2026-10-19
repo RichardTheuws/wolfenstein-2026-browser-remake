@@ -155,13 +155,14 @@ export class GameState {
     /**
      * Apply damage to the player.
      * @param {number} amount - Damage points
+     * @param {{x: number, z: number}|null} [source] - World position of the attacker (for directional indicator)
      */
-    takeDamage(amount) {
+    takeDamage(amount, source = null) {
         // God mode: invincible — take no damage
         if (this.godMode) return;
 
         this.health = Math.max(0, this.health - amount);
-        eventBus.emit('player:damage', { health: this.health, amount });
+        eventBus.emit('player:damage', { health: this.health, amount, source });
 
         if (this.health <= 0) {
             this.lives--;

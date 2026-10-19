@@ -5,6 +5,23 @@ All notable changes to the Infernal Assault project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-10-19 — Directional Damage Indicator (Wave 3)
+
+### Added
+
+- Directional damage indicator: when hit, a red arc appears on a ring around the
+  crosshair pointing toward the attacker (front = top, behind = bottom). The arc keeps
+  tracking the attacker's world position as you turn, and fades out over ~1.2s.
+  Up to 4 arcs at once; repeated fire from the same spot refreshes its arc.
+- `enemy:attack` now carries the attacker position (`sourceX`/`sourceZ`) for enemies and
+  boss hitscan/rocket attacks; `player:damage` passes it on as `source`. Gas-cloud damage
+  stays non-directional (you are standing in it).
+
+### Notes
+
+- Verified headless in Episode 1: real guard hits arrive with a source position, the
+  arc renders on the correct side, fades via the game loop, 0 console errors.
+
 ## [0.6.0] - 2026-06-18 — Game Feel (Wave 3)
 
 ### Added
