@@ -3,7 +3,8 @@
 # Models, textures and audio keep the server's long cache.
 <IfModule mod_headers.c>
     <FilesMatch "\.(html|js|mjs|css|json)$">
-        Header set Cache-Control "no-cache"
+        # "private" stops Cloudflare's 4h Browser Cache TTL from overriding this
+        Header set Cache-Control "private, no-cache"
         Header unset Expires
     </FilesMatch>
 </IfModule>

@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Added `.htaccess` so HTML/JS/CSS/JSON are served with `Cache-Control: no-cache`
-  (revalidate every load via ETag/Last-Modified). Previously the server sent a 7-day
+- Added `.htaccess` so HTML/JS/CSS/JSON are served with `Cache-Control: private, no-cache`
+  (revalidate every load via ETag/Last-Modified; `private` keeps Cloudflare from
+  overriding it with its 4h Browser Cache TTL, so code bypasses the CDN). Previously the server sent a 7-day
   `max-age`, so after a deploy browsers and Cloudflare kept serving stale (mixed) code.
   Models, textures and audio keep the long cache.
 
