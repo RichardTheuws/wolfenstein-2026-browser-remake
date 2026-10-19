@@ -44,6 +44,7 @@ export class InputManager {
 
         /** Accumulated mobile look delta (added to mouse delta) */
         this._mobileLookDelta = 0;
+        this._mobileLookDeltaY = 0;
 
         /** Whether mobile fire is held */
         this._mobileFire = false;
@@ -100,7 +101,7 @@ export class InputManager {
     getMouseDelta() {
         return {
             x: this._mouseDeltaX * this.mouseSensitivity + this._mobileLookDelta,
-            y: this._mouseDeltaY * this.mouseSensitivity,
+            y: this._mouseDeltaY * this.mouseSensitivity + this._mobileLookDeltaY,
         };
     }
 
@@ -155,9 +156,11 @@ export class InputManager {
      * Add mobile look rotation delta (called by MobileControls on touch move).
      * Accumulated like mouse delta and consumed at frame reset.
      * @param {number} dx - Horizontal rotation delta (pre-scaled)
+     * @param {number} [dy=0] - Vertical (pitch) delta (pre-scaled, positive = look down)
      */
-    setMobileLook(dx) {
+    setMobileLook(dx, dy = 0) {
         this._mobileLookDelta += dx;
+        this._mobileLookDeltaY += dy;
     }
 
     /**
@@ -208,6 +211,7 @@ export class InputManager {
         this._mouseDeltaX = 0;
         this._mouseDeltaY = 0;
         this._mobileLookDelta = 0;
+        this._mobileLookDeltaY = 0;
         this._mobileInteract = false;
     }
 

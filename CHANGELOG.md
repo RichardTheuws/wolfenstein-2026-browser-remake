@@ -5,6 +5,19 @@ All notable changes to the Infernal Assault project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-10-19 — Mobile Touch Pitch (Wave 3)
+
+### Added
+
+- Mobile touch-look now controls pitch as well as yaw: dragging on the right half of the
+  screen tilts the view up/down (same direction as the mouse, clamped to ±60°). Pitch is
+  damped to 0.6× of yaw sensitivity so horizontal swipes don't drift the view.
+
+### Notes
+
+- Verified on an emulated Pixel 7 (landscape) with real touch events: dragging down looks
+  at the floor, dragging up looks at the ceiling, 0 console errors.
+
 ## [0.7.0] - 2026-10-19 — Directional Damage Indicator (Wave 3)
 
 ### Added

@@ -12,6 +12,9 @@ const DEAD_ZONE = 0.1;
 /** Look sensitivity multiplier for touch delta */
 const LOOK_SENSITIVITY = 0.004;
 
+/** Pitch is damped vs yaw so horizontal swipes don't drift the view up/down */
+const LOOK_PITCH_FACTOR = 0.6;
+
 /** Joystick ring radius in pixels (half of the 120px CSS ring) */
 const RING_RADIUS = 60;
 
@@ -62,6 +65,7 @@ export class MobileControls {
 
         /** Previous touch position for delta calculation */
         this._lookPrevX = 0;
+        this._lookPrevY = 0;
 
         // ── Fire state ────────────────────────────────────────────
         /** Whether fire button is currently held */
@@ -345,6 +349,7 @@ export class MobileControls {
             if (touch.clientX > window.innerWidth / 2 && !this._isButtonTouch(touch.target)) {
                 this._lookTouchId = touch.identifier;
                 this._lookPrevX = touch.clientX;
+                this._lookPrevY = touch.clientY;
                 break;
             }
         }
@@ -359,10 +364,15 @@ export class MobileControls {
         for (const touch of e.changedTouches) {
             if (touch.identifier === this._lookTouchId) {
                 const dx = touch.clientX - this._lookPrevX;
+                const dy = touch.clientY - this._lookPrevY;
                 this._lookPrevX = touch.clientX;
+                this._lookPrevY = touch.clientY;
 
-                // Feed horizontal delta into InputManager as look rotation
-                this._input.setMobileLook(dx * LOOK_SENSITIVITY);
+                // Feed delta into InputManager as look rotation (yaw + damped pitch)
+                this._input.setMobileLook(
+                    dx * LOOK_SENSITIVITY,
+                    dy * LOOK_SENSITIVITY * LOOK_PITCH_FACTOR
+                );
                 break;
             }
         }
