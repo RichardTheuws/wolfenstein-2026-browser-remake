@@ -1,0 +1,9 @@
+# Code must revalidate on every load (cheap 304 via ETag/Last-Modified), so a deploy
+# reaches players immediately instead of after the 7-day default cache.
+# Models, textures and audio keep the server's long cache.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(html|js|mjs|css|json)$">
+        Header set Cache-Control "no-cache"
+        Header unset Expires
+    </FilesMatch>
+</IfModule>
