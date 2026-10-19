@@ -5,6 +5,16 @@ All notable changes to the Infernal Assault project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1] - 2026-10-19 — Fix invisible enemies
+
+### Fixed
+
+- Enemies and bosses were invisible in-game since the Wave 2.2/2.3 skinning update.
+  Models were copied with plain `Object3D.clone()`, which leaves cloned SkinnedMeshes bound
+  to the template's skeleton (not in the scene), so they deformed out of view. Model
+  cloning now uses `SkeletonUtils.clone()` (model-loader, enemy, boss), which rebinds each
+  copy to its own bones and still works for rigid models.
+
 ## [0.8.0] - 2026-10-19 — Mobile Touch Pitch (Wave 3)
 
 ### Added

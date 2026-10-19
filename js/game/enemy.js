@@ -7,6 +7,7 @@
  */
 
 import * as THREE from 'three';
+import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { eventBus } from '../engine/event-bus.js';
 import { EnemyAnimator } from './enemy-animator.js';
 import { EnemyAnimationMixer } from './enemy-animation-mixer.js';
@@ -549,7 +550,7 @@ export class Enemy {
      * @param {THREE.AnimationClip[]} [animations=[]] - Embedded animation clips from the GLB
      */
     _applyModel(modelTemplate, animations = []) {
-        const clone = modelTemplate.clone();
+        const clone = cloneSkinned(modelTemplate);
 
         // Calculate bounding box of the model to determine scale
         const box = new THREE.Box3().setFromObject(clone);

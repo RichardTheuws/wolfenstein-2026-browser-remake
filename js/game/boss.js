@@ -12,6 +12,7 @@
  */
 
 import * as THREE from 'three';
+import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { eventBus } from '../engine/event-bus.js';
 import { EnemyAnimationMixer } from './enemy-animation-mixer.js';
 
@@ -411,7 +412,7 @@ export class Boss {
         if (Boss._models.has(this._bossType)) {
             // Use preloaded 3D model
             const modelData = Boss._models.get(this._bossType);
-            const clone = modelData.scene.clone();
+            const clone = cloneSkinned(modelData.scene);
 
             // Scale model to match boss dimensions
             const box = new THREE.Box3().setFromObject(clone);

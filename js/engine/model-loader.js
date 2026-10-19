@@ -7,6 +7,8 @@
  */
 
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+// SkeletonUtils.clone rebinds cloned SkinnedMeshes to their own bones (plain clone() keeps the template's skeleton)
+import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 export class ModelLoader {
     constructor() {
@@ -31,13 +33,13 @@ export class ModelLoader {
         // Return cached model if available
         if (this._cache.has(url)) {
             const cached = this._cache.get(url);
-            return { scene: cached.scene.clone(), animations: cached.animations };
+            return { scene: cloneSkinned(cached.scene), animations: cached.animations };
         }
 
         // Deduplicate in-flight requests for the same URL
         if (this._loading.has(url)) {
             const result = await this._loading.get(url);
-            return { scene: result.scene.clone(), animations: result.animations };
+            return { scene: cloneSkinned(result.scene), animations: result.animations };
         }
 
         // Start loading
@@ -64,7 +66,7 @@ export class ModelLoader {
         this._loading.set(url, loadPromise);
 
         const result = await loadPromise;
-        return { scene: result.scene.clone(), animations: result.animations };
+        return { scene: cloneSkinned(result.scene), animations: result.animations };
     }
 
     /**
@@ -76,7 +78,7 @@ export class ModelLoader {
     getCachedModel(url) {
         if (this._cache.has(url)) {
             const cached = this._cache.get(url);
-            return { scene: cached.scene.clone(), animations: cached.animations };
+            return { scene: cloneSkinned(cached.scene), animations: cached.animations };
         }
         return null;
     }
