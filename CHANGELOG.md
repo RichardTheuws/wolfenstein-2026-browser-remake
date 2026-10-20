@@ -5,6 +5,21 @@ All notable changes to the Infernal Assault project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-10-20 — Enemy pathfinding (Wave 4)
+
+### Added
+
+- `js/engine/pathfinder.js`: grid A* (8-directional, no corner cutting, binary heap)
+  that reads the collision grid live, so door and pushwall state is always current.
+- Chasing enemies without a straight corridor to the player now walk an A* route
+  around walls and corners (replanned every ~0.5s, shortcutting ahead while the
+  line is clear) and face their direction of travel. Previously they pushed
+  straight at the player and got stuck behind the first wall. With a clear line,
+  or no route at all (closed door), the classic direct steering is unchanged.
+- `tests/pathfinder.test.mjs` (`node --test tests/pathfinder.test.mjs`): synthetic
+  grids plus a check across all 33 levels that every enemy can route to the
+  player start whenever it is reachable.
+
 ## [0.8.2] - 2026-10-20 — Cache headers for code
 
 ### Fixed

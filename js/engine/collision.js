@@ -31,6 +31,27 @@ export class CollisionSystem {
         this._height = height;
     }
 
+    /** Grid width (X dimension) */
+    get width() {
+        return this._width;
+    }
+
+    /** Grid height (Z dimension) */
+    get height() {
+        return this._height;
+    }
+
+    /**
+     * Check if a circle of the given radius at a world position touches no wall.
+     * @param {number} worldX
+     * @param {number} worldZ
+     * @param {number} radius
+     * @returns {boolean}
+     */
+    isPositionClear(worldX, worldZ, radius) {
+        return this._isPositionClear(worldX, worldZ, radius);
+    }
+
     /**
      * Check if a grid cell is a solid wall.
      * Out-of-bounds cells are treated as walls.

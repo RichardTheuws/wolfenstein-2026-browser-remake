@@ -11,6 +11,7 @@ import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { eventBus } from '../engine/event-bus.js';
 import { EnemyAnimator } from './enemy-animator.js';
 import { EnemyAnimationMixer } from './enemy-animation-mixer.js';
+import { Pathfinder } from '../engine/pathfinder.js';
 
 // ── Enemy Type Definitions ─────────────────────────────────────────
 
@@ -157,6 +158,31 @@ const MAX_ATTACK_RANGE = 15;
 /** Collision radius for enemies */
 const ENEMY_RADIUS = 0.3;
 
+/** How often a chasing enemy recomputes its route (seconds, plus jitter) */
+const REPATH_INTERVAL = 0.5;
+const REPATH_JITTER = 0.25;
+
+/** Retry delay after a path step made no progress (seconds) */
+const REPATH_STUCK_DELAY = 0.2;
+
+/** Distance at which a path waypoint counts as reached */
+const WAYPOINT_REACHED = 0.15;
+
+/** How many waypoints ahead an enemy may shortcut to in a straight line */
+const PATH_LOOKAHEAD = 4;
+
+/** One pathfinder (and its search buffers) per collision system */
+const _pathfinders = new WeakMap();
+
+function getPathfinder(collision) {
+    let pf = _pathfinders.get(collision);
+    if (!pf) {
+        pf = new Pathfinder(collision);
+        _pathfinders.set(collision, pf);
+    }
+    return pf;
+}
+
 /** Default enemy mesh dimensions (overridden by type data) */
 const DEFAULT_ENEMY_WIDTH = 0.6;
 const DEFAULT_ENEMY_HEIGHT = 1.8;
@@ -267,6 +293,15 @@ export class Enemy {
         /** Reference to collision system */
         this._collision = collisionSystem;
 
+        /** A* route to the player while chasing out of sight */
+        this._pathfinder = getPathfinder(collisionSystem);
+        this._path = null;
+        this._pathIndex = 0;
+        this._repathTimer = 0;
+
+        /** True on frames where the enemy walks a path (faces travel direction) */
+        this._pathing = false;
+
         /** Reference to scene */
         this._scene = scene;
 
@@ -354,6 +389,8 @@ export class Enemy {
             return;
         }
 
+        this._pathing = false;
+
         // State machine
         switch (this.state) {
             case STATE.IDLE:
@@ -376,8 +413,13 @@ export class Enemy {
                 break;
         }
 
-        // Billboard: rotate mesh Y to face camera/player
-        this._billboardToward(playerPos);
+        // Billboard: rotate mesh Y to face camera/player — or, while walking a
+        // route around walls, face the direction of travel
+        if (this._pathing) {
+            this.mesh.rotation.y = this.angle;
+        } else {
+            this._billboardToward(playerPos);
+        }
 
         // Sync mesh position
         this.mesh.position.set(this.position.x, this._height / 2, this.position.z);
@@ -850,8 +892,18 @@ export class Enemy {
             return;
         }
 
-        // Move toward player at alert speed
         const speed = this._typeData.alertSpeed;
+
+        // No straight corridor to the player: walk an A* route around walls.
+        // Without a route (e.g. behind a closed door) fall through to direct steering.
+        const pf = this._pathfinder;
+        if (pf.hasClearLine(this.position.x, this.position.z, playerPos.x, playerPos.z, ENEMY_RADIUS)) {
+            this._path = null;
+        } else if (this._followPath(dt, playerPos, speed)) {
+            return;
+        }
+
+        // Move toward player at alert speed
         const nx = dx / dist;
         const nz = dz / dist;
 
@@ -948,6 +1000,59 @@ export class Enemy {
             this.state = STATE.CHASE;
             if (this._animator) this._animator.setState('walk');
         }
+    }
+
+    /**
+     * Walk the A* route toward the player, shortcutting to the furthest
+     * waypoint that is reachable in a straight line.
+     * @param {number} dt
+     * @param {THREE.Vector3} playerPos
+     * @param {number} speed
+     * @returns {boolean} False when there is no usable route
+     */
+    _followPath(dt, playerPos, speed) {
+        const pf = this._pathfinder;
+        this._repathTimer -= dt;
+        if (!this._path || this._repathTimer <= 0) {
+            this._repathTimer = REPATH_INTERVAL + Math.random() * REPATH_JITTER;
+            this._path = pf.findPath(this.position.x, this.position.z, playerPos.x, playerPos.z);
+            this._pathIndex = 0;
+        }
+
+        const path = this._path;
+        if (!path) return false;
+
+        // Drop waypoints already reached
+        while (this._pathIndex < path.length) {
+            const wp = path[this._pathIndex];
+            if (Math.hypot(wp.x - this.position.x, wp.z - this.position.z) > WAYPOINT_REACHED) break;
+            this._pathIndex++;
+        }
+        if (this._pathIndex >= path.length) {
+            this._path = null;
+            return false;
+        }
+
+        // Shortcut ahead while the corridor is clear
+        const last = Math.min(path.length - 1, this._pathIndex + PATH_LOOKAHEAD);
+        for (let i = this._pathIndex + 1; i <= last; i++) {
+            if (!pf.hasClearLine(this.position.x, this.position.z, path[i].x, path[i].z, ENEMY_RADIUS)) break;
+            this._pathIndex = i;
+        }
+
+        const target = path[this._pathIndex];
+        const dx = target.x - this.position.x;
+        const dz = target.z - this.position.z;
+        const dist = Math.hypot(dx, dz);
+        const step = Math.min(speed * dt, dist);
+
+        if (!this._moveWithCollision(dx / dist * step, dz / dist * step)) {
+            this._repathTimer = Math.min(this._repathTimer, REPATH_STUCK_DELAY);
+        }
+
+        this.angle = Math.atan2(dx, dz);
+        this._pathing = true;
+        return true;
     }
 
     // ── Internal: Combat ───────────────────────────────────────────────

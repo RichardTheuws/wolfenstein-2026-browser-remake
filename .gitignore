@@ -4,7 +4,8 @@ coverage/
 
 # Old source (Infernal Assault legacy)
 src/
-tests/
+tests/*
+!tests/pathfinder.test.mjs
 docs/
 .husky/
 .eslintrc.js
